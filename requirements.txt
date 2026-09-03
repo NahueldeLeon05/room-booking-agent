@@ -1,1 +1,3 @@
 sqlalchemy
+passlib
+bcrypt<4.1
