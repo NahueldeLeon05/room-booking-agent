@@ -1,5 +1,5 @@
-sqlalchemy
-passlib
-bcrypt<4.1
-fastapi
-uvicorn
+sqlalchemy==2.0.52
+passlib==1.7.4
+bcrypt==4.0.1
+fastapi==0.141.1
+uvicorn==0.52.4
