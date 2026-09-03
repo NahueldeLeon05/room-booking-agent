@@ -3,7 +3,7 @@ This journal records the work completed each day, the decisions made, the obstac
 
 ## Entries
 
-## 2026-08-31 — Day 1: Setup and stack selection
+### 2026-08-31 — Day 1: Setup and stack selection
 
 **Done**
 
@@ -19,7 +19,7 @@ This journal records the work completed each day, the decisions made, the obstac
 
 - None.
 
-## 2026-09-01 — Day 2: Interaction model
+### 2026-09-01 — Day 2: Interaction model
 
 **Done**
 
@@ -41,3 +41,26 @@ This journal records the work completed each day, the decisions made, the obstac
 - Tools must return information that the model can verbalize, not structures designed to be rendered.
 - Bookings need short, human-referenceable identifiers because the user has to name one in the conversation to cancel it.
 
+### 2026-09-02 — Day 3: Persistence and early deployment
+
+**Done**
+
+- ORM models, configuration, database session, idempotent seed.
+- Minimal FastAPI app with /health.
+- Deployed to Railway with a persistent volume.
+- Refactored `init_db()` and `seed()` to accept an isolated engine or session for tests while keeping their default behavior.
+- Added four persistence tests for schema creation, seed data, seed idempotency, and duplicate room slots.
+- Verified that the database rejects two bookings that try to hold the same room and time slot.
+- Documented the remaining booking assumptions in `01-assumptions.md`.
+- Documented the data model, concurrency strategy, and business-rule catalogue.
+
+**Obstacles**
+
+- Railpack did not detect the deprecated Procfile, so the deployment had no start command.
+- First deploy crashed in init_db(): DATABASE_URL pointed to /data but
+  no volume was mounted yet.
+
+**Resolution**
+
+- Replaced the Procfile with `railpack.json`, which keeps the start command versioned in the repository.
+- Mounted a Railway volume at `/data` and configured `DATABASE_URL` to use `/data/app.db`.
