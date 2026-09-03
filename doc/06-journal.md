@@ -51,6 +51,7 @@ This journal records the work completed each day, the decisions made, the obstac
 - Refactored `init_db()` and `seed()` to accept an isolated engine or session for tests while keeping their default behavior.
 - Added four persistence tests for schema creation, seed data, seed idempotency, and duplicate room slots.
 - Verified that the database rejects two bookings that try to hold the same room and time slot.
+- Enabled SQLite foreign key enforcement and verified that rows with missing parents are rejected.
 - Documented the remaining booking assumptions in `01-assumptions.md`.
 - Documented the data model, concurrency strategy, and business-rule catalogue.
 
