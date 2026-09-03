@@ -1,3 +1,5 @@
 sqlalchemy
 passlib
 bcrypt<4.1
+fastapi
+uvicorn
