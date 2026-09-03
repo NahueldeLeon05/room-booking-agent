@@ -20,6 +20,32 @@ This also requires the system to know the current date and time, which has a con
 The example in the challenge (an appointment from 10:00 to 11:30 prevents another one from starting before 11:30) confirms that the room is available starting at 11:30.
 It follows that the interval is half-open: [start, end), with the start included and the end excluded. The consequences for overlap detection are detailed in [03-business-rules.md](03-business-rules.md).
 
+## Working days
+The challenge defines the business hours, but it does not specify which days the office operates.
+I assume that bookings can only be made from Monday to Friday. This is consistent with the 08:00 to 20:00 office hours and with a corporate office that does not operate on weekends.
+Therefore, slot generation and booking validation must reject Saturdays and Sundays.
+
+## Booking horizon
+The challenge does not define how far in advance a booking can be made.
+I assume that bookings can be made up to 90 days in advance. Without a limit, availability searches could receive unreasonable ranges, and booking more than three months ahead has little operational value.
+This limit must live in the configuration instead of being repeated as a magic number.
+
+## Minimum attendees
+The challenge requires the number of attendees, but it does not define a minimum.
+I assume that a booking must have at least one attendee because a booking for zero people does not represent a real meeting.
+If someone requests a room for more than 20 people, no room can satisfy the request. The error must state the maximum room capacity instead of returning a generic message.
+
+## Cancellation of past bookings
+I assume that a booking cannot be cancelled if its `starts_at` time has already passed. Once the meeting has started, cancelling it does not free any useful time.
+The cutoff is the start time, not the end time or the day. This means that a booking already in progress cannot be cancelled.
+The system needs to know the current time to enforce this rule, just as it does when rejecting bookings in the past.
+
+## Meaning of "available" for a time range
+I assume that a room is available only if it is free for the entire requested time range.
+Someone asking what is available from 14:00 to 17:00 wants to schedule a three-hour meeting. A room with separate free slots during that range is not useful and listing it would add noise.
+The `get_room_schedule` tool covers the other case by showing the occupied and free slots for one room.
+If no room is free for the complete range, the result is empty. The system must compensate for this with an actionable error that suggests alternatives.
+
 ## Additional tools
 The challenge lists four actions and does not include "List my bookings." Without this option, the
 user cannot know what to cancel. Therefore, it will be implemented.
