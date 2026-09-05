@@ -15,6 +15,9 @@ Without a time limit, displaying the schedule to the user would show 48 slots, h
 I assume that bookings cannot be made for times that have already passed.
 This also requires the system to know the current date and time, which has a concrete consequence for the agent because it does not know them and they must be injected into it.
 
+## Timezone
+The challenge does not define a timezone. I use a fixed UTC-3 offset instead of `America/Montevideo` because Uruguay does not currently observe daylight saving time.
+SQLite stores booking datetimes as local values without timezone information. The repository adds `OFFICE_TZ` when it maps them back to the domain. This restores the known offset without changing the stored clock time.
 
 ## Interval semantics
 The example in the challenge (an appointment from 10:00 to 11:30 prevents another one from starting before 11:30) confirms that the room is available starting at 11:30.
