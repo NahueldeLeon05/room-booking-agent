@@ -66,19 +66,25 @@ This journal records the work completed each day, the decisions made, the obstac
 - Replaced the Procfile with `railpack.json`, which keeps the start command versioned in the repository.
 - Mounted a Railway volume at `/data` and configured `DATABASE_URL` to use `/data/app.db`.
 
-### 2026-09-05 — Day 4: Authentication
+### 2026-09-05 — Day 4: Domain, authentication and first agent
 
 **Done**
 
-- Added minimal JWT authentication with login and current-user endpoints.
-- Added isolated API tests for valid and invalid credentials and protected routes.
+- Added the `TimeRange` value object with half-open interval semantics.
+- Added JWT authentication. The `user_id` is resolved only from the token.
+- Added the booking domain entity, repository, service, and listing endpoint.
+- Added a LangGraph agent with one tool and tested the full flow from Swagger.
 
 **Decisions**
 
-- Access tokens expire after 24 hours, which is sufficient for this demonstration while still limiting the lifetime of a leaked token.
+- Access tokens expire after 24 hours. This is enough for the demo and limits the lifetime of a leaked token.
+- Built the agent with one tool before implementing the rest to validate the loop early. This follows the same reasoning as the early deployment.
+- The `user_id` is injected through a closure and is never exposed as a tool parameter. The model cannot choose another identity.
 - Test-only dependencies live in `requirements-dev.txt`, so Railway does not install them in production.
 
 **Dependencies**
 
-- `python-jose[cryptography]` signs and validates JWT access tokens, including their signatures and expiration claims.
-- `httpx` is used only by FastAPI's `TestClient` to send requests to the application during tests.
+- `python-jose[cryptography]` signs and validates JWT access tokens.
+- `httpx` is used only by FastAPI's `TestClient` during tests.
+- `langgraph` manages the agent and tool loop.
+- `langchain-openai` connects the agent to OpenAI.
