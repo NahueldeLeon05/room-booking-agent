@@ -66,21 +66,36 @@ This journal records the work completed each day, the decisions made, the obstac
 - Replaced the Procfile with `railpack.json`, which keeps the start command versioned in the repository.
 - Mounted a Railway volume at `/data` and configured `DATABASE_URL` to use `/data/app.db`.
 
-### 2026-09-05 — Day 4: Domain, authentication and first agent
+### 2026-09-05 — Day 4: Domain, service layer and first agent
 
 **Done**
 
 - Added the `TimeRange` value object with half-open interval semantics.
 - Added JWT authentication. The `user_id` is resolved only from the token.
 - Added the booking domain entity, repository, service, and listing endpoint.
+- Added booking-rule validation with explicit boundary tests.
+- Added booking creation, cancellation, availability, and room schedule queries.
 - Added a LangGraph agent with one tool and tested the full flow from Swagger.
+- Reached 66 passing tests.
 
 **Decisions**
 
 - Access tokens expire after 24 hours. This is enough for the demo and limits the lifetime of a leaked token.
 - Built the agent with one tool before implementing the rest to validate the loop early. This follows the same reasoning as the early deployment.
 - The `user_id` is injected through a closure and is never exposed as a tool parameter. The model cannot choose another identity.
+- Booking creation inserts without a prior availability query. The database unique constraint decides the conflict and prevents a check-then-act window.
+- A booking that does not belong to the user returns `BookingNotFound`, just like a missing booking. This does not reveal the existence of other users' bookings.
 - Test-only dependencies live in `requirements-dev.txt`, so Railway does not install them in production.
+
+**Obstacles**
+
+- The application failed during local startup when `JWT_SECRET` and `SEED_USER_PASSWORD` were missing.
+- SQLite returned stored datetimes without timezone information.
+
+**Resolution**
+
+- Kept the environment variables required and configured them locally and in Railway.
+- The repository restores `OFFICE_TZ` when mapping database values to the domain.
 
 **Dependencies**
 
