@@ -6,3 +6,4 @@ uvicorn==0.52.4
 python-jose[cryptography]==3.5.0
 langgraph==1.2.11
 langchain-openai==1.6.0
+streamlit==1.63.0
