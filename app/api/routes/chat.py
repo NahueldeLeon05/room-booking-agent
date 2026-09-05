@@ -22,8 +22,14 @@ class ChatHistoryMessage(BaseModel):
 
 
 class ChatRequest(BaseModel):
-    message: str
-    history: list[ChatHistoryMessage] = Field(default_factory=list)
+    message: str = Field(description="New message written by the user.")
+    history: list[ChatHistoryMessage] = Field(
+        default_factory=list,
+        description=(
+            "Previous user and assistant messages in order. The client must "
+            "send them again with every request."
+        ),
+    )
 
 
 class ChatResponse(BaseModel):

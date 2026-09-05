@@ -10,6 +10,7 @@ from app.agent.tools import build_tools
 from app.config import (
     BUSINESS_END,
     BUSINESS_START,
+    MAX_BOOKING_HOURS,
     OFFICE_TZ,
     OPENAI_API_KEY,
     OPENAI_MODEL,
@@ -49,17 +50,27 @@ def build_graph(
 
 def _system_prompt() -> str:
     now = datetime.now(OFFICE_TZ).strftime("%Y-%m-%d %H:%M %z")
-    rooms = ", ".join(ROOM_CAPACITIES)
+    rooms = ", ".join(
+        f"{name} (capacity {capacity})"
+        for name, capacity in ROOM_CAPACITIES.items()
+    )
     business_start = BUSINESS_START.strftime("%H:%M")
     business_end = BUSINESS_END.strftime("%H:%M")
 
+    # The prompt improves the conversation but does not enforce these rules.
+    # Server-side services validate every argument received through a tool.
     return (
         "You are the conversational room-booking assistant for the Cubo Itaú "
         f"office. The office has {len(ROOM_CAPACITIES)} meeting rooms: {rooms}. "
-        f"Business hours are {business_start} to {business_end}, and bookings "
-        f"use {SLOT_MINUTES}-minute slots. The current office date and time is "
-        f"{now}. Use the available tools when they are needed to answer the "
-        "user accurately. The prompt only describes the rules for better "
-        "conversation; tools and server-side services are responsible for "
-        "enforcing them."
+        f"Business hours are Monday through Friday from {business_start} to "
+        f"{business_end}. Bookings use {SLOT_MINUTES}-minute slots and can last "
+        f"at most {MAX_BOOKING_HOURS} hours. The current office date and time "
+        f"is {now}. Use the available tools when they are needed to answer the "
+        "user accurately. Always answer the user in Spanish, even if the user "
+        "writes in another language. Before calling create_booking, repeat the "
+        "room, date, start and end times, title, and attendee count. Ask the "
+        "user to confirm these details and wait for an explicit confirmation. "
+        "Do not treat the initial booking request as confirmation. The prompt "
+        "only describes the rules for better conversation; tools and "
+        "server-side services are responsible for enforcing them."
     )
