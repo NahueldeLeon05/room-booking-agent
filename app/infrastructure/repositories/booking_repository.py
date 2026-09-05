@@ -1,10 +1,10 @@
-from datetime import datetime
+from datetime import date, datetime
 
 from sqlalchemy import delete, exists, select, update
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from app.config import OFFICE_TZ
+from app.config import BUSINESS_END, BUSINESS_START, OFFICE_TZ
 from app.domain.booking import Booking
 from app.domain.exceptions import RoomNotAvailable
 from app.domain.room import Room
@@ -128,11 +128,12 @@ class BookingRepository:
 
         return list(self._session.scalars(statement).all())
 
-    def find_rooms_available_in(
+    def find_available_rooms(
         self,
         time_range: TimeRange,
         min_capacity: int,
     ) -> list[Room]:
+        # One occupied requested slot excludes the room for the full range.
         occupied_slot_exists = exists().where(
             BookingSlotModel.room_id == RoomModel.id,
             BookingSlotModel.slot_start.in_(time_range.slot_starts()),
@@ -149,6 +150,36 @@ class BookingRepository:
         return [
             self._room_to_domain(room_model)
             for room_model in self._session.scalars(statement).all()
+        ]
+
+    def find_taken_slots_for_day(
+        self,
+        room_id: int,
+        day: date,
+    ) -> list[datetime]:
+        business_start = datetime.combine(
+            day,
+            BUSINESS_START,
+            tzinfo=OFFICE_TZ,
+        )
+        business_end = datetime.combine(
+            day,
+            BUSINESS_END,
+            tzinfo=OFFICE_TZ,
+        )
+        statement = (
+            select(BookingSlotModel.slot_start)
+            .where(
+                BookingSlotModel.room_id == room_id,
+                BookingSlotModel.slot_start >= business_start,
+                BookingSlotModel.slot_start < business_end,
+            )
+            .order_by(BookingSlotModel.slot_start.asc())
+        )
+
+        return [
+            self._as_office_time(slot_start)
+            for slot_start in self._session.scalars(statement).all()
         ]
 
     def get_room_by_name(self, name: str) -> Room | None:
