@@ -9,3 +9,6 @@ BUSINESS_END = time(20, 0)
 ROOM_CAPACITIES = {"A": 4, "B": 6, "C": 8, "D": 12, "E": 20}
 OFFICE_TZ = timezone(timedelta(hours=-3))
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./app.db")
+JWT_SECRET = os.environ["JWT_SECRET"]
+JWT_ALGORITHM = "HS256"
+JWT_EXPIRATION_HOURS = 24

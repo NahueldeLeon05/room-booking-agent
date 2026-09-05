@@ -65,3 +65,20 @@ This journal records the work completed each day, the decisions made, the obstac
 
 - Replaced the Procfile with `railpack.json`, which keeps the start command versioned in the repository.
 - Mounted a Railway volume at `/data` and configured `DATABASE_URL` to use `/data/app.db`.
+
+### 2026-09-05 — Day 4: Authentication
+
+**Done**
+
+- Added minimal JWT authentication with login and current-user endpoints.
+- Added isolated API tests for valid and invalid credentials and protected routes.
+
+**Decisions**
+
+- Access tokens expire after 24 hours, which is sufficient for this demonstration while still limiting the lifetime of a leaked token.
+- Test-only dependencies live in `requirements-dev.txt`, so Railway does not install them in production.
+
+**Dependencies**
+
+- `python-jose[cryptography]` signs and validates JWT access tokens, including their signatures and expiration claims.
+- `httpx` is used only by FastAPI's `TestClient` to send requests to the application during tests.
