@@ -1,7 +1,7 @@
 from datetime import datetime
 
-from sqlalchemy import exists, select
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy import delete, exists, select, update
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.config import OFFICE_TZ
@@ -32,6 +32,25 @@ class BookingRepository:
             self._to_domain(booking_model, room_name)
             for booking_model, room_name in rows
         ]
+
+    def find_by_id_and_user(
+        self,
+        booking_id: int,
+        user_id: int,
+    ) -> Booking | None:
+        row = self._session.execute(
+            select(BookingModel, RoomModel.name)
+            .join(RoomModel, BookingModel.room_id == RoomModel.id)
+            .where(
+                BookingModel.id == booking_id,
+                BookingModel.user_id == user_id,
+            )
+        ).one_or_none()
+
+        if row is None:
+            return None
+
+        return self._to_domain(*row)
 
     def create(
         self,
@@ -75,6 +94,23 @@ class BookingRepository:
         ).one()
 
         return self._to_domain(*created_booking)
+
+    def cancel(self, booking_id: int) -> None:
+        try:
+            self._session.execute(
+                update(BookingModel)
+                .where(BookingModel.id == booking_id)
+                .values(status="cancelled")
+            )
+            self._session.execute(
+                delete(BookingSlotModel).where(
+                    BookingSlotModel.booking_id == booking_id
+                )
+            )
+            self._session.commit()
+        except SQLAlchemyError:
+            self._session.rollback()
+            raise
 
     def find_taken_slots(
         self,
@@ -134,11 +170,22 @@ class BookingRepository:
             title=booking_model.title,
             attendees=booking_model.attendees,
             time_range=TimeRange(
-                starts_at=booking_model.starts_at,
-                ends_at=booking_model.ends_at,
+                starts_at=BookingRepository._as_office_time(
+                    booking_model.starts_at
+                ),
+                ends_at=BookingRepository._as_office_time(
+                    booking_model.ends_at
+                ),
             ),
             status=booking_model.status,
         )
+
+    @staticmethod
+    def _as_office_time(value: datetime) -> datetime:
+        if value.tzinfo is None:
+            return value.replace(tzinfo=OFFICE_TZ)
+
+        return value.astimezone(OFFICE_TZ)
 
     @staticmethod
     def _room_to_domain(room_model: RoomModel) -> Room:

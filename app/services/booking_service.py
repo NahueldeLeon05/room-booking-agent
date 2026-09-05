@@ -4,11 +4,16 @@ from typing import Protocol
 
 from app.config import OFFICE_TZ
 from app.domain.booking import Booking
-from app.domain.exceptions import RoomNotAvailable, RoomNotFound
+from app.domain.exceptions import (
+    BookingNotFound,
+    RoomNotAvailable,
+    RoomNotFound,
+)
 from app.domain.room import Room
 from app.domain.rules import (
     validate_booking_horizon,
     validate_business_hours,
+    validate_can_be_cancelled,
     validate_max_duration,
     validate_minimum_attendees,
     validate_not_in_the_past,
@@ -21,6 +26,12 @@ from app.domain.time_range import TimeRange
 
 class BookingRepositoryProtocol(Protocol):
     def find_active_by_user(self, user_id: int) -> list[Booking]: ...
+
+    def find_by_id_and_user(
+        self,
+        booking_id: int,
+        user_id: int,
+    ) -> Booking | None: ...
 
     def create(
         self,
@@ -45,6 +56,8 @@ class BookingRepositoryProtocol(Protocol):
 
     def get_room_by_name(self, name: str) -> Room | None: ...
 
+    def cancel(self, booking_id: int) -> None: ...
+
 
 def _current_office_time() -> datetime:
     return datetime.now(OFFICE_TZ)
@@ -61,6 +74,20 @@ class BookingService:
 
     def list_my_bookings(self, user_id: int) -> list[Booking]:
         return self._repository.find_active_by_user(user_id)
+
+    def cancel_booking(self, user_id: int, booking_id: int) -> None:
+        booking = self._repository.find_by_id_and_user(
+            booking_id,
+            user_id,
+        )
+        if booking is None or booking.status == "cancelled":
+            raise BookingNotFound(booking_id)
+
+        validate_can_be_cancelled(
+            booking.time_range.starts_at,
+            self._clock(),
+        )
+        self._repository.cancel(booking_id)
 
     def create_booking(
         self,

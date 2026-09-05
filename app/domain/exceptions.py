@@ -45,6 +45,17 @@ class BookingAlreadyStarted(DomainError):
     """Raised when cancellation is attempted at or after the start time."""
 
 
+class BookingNotFound(DomainError):
+    """Raised when a booking is missing or does not belong to the user."""
+
+    def __init__(self, booking_id: int) -> None:
+        self.booking_id = booking_id
+        super().__init__(
+            f"Booking {booking_id} was not found among your bookings. "
+            "Check the booking ID and try again."
+        )
+
+
 class RoomNotFound(DomainError):
     """Raised when a requested room does not exist."""
 
