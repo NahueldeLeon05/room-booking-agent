@@ -4,6 +4,8 @@ from datetime import time, timedelta, timezone
 
 SLOT_MINUTES = 30
 MAX_BOOKING_HOURS = 3
+MAX_BOOKING_HORIZON_DAYS = 90
+MIN_ATTENDEES = 1
 BUSINESS_START = time(8, 0)
 BUSINESS_END = time(20, 0)
 ROOM_CAPACITIES = {"A": 4, "B": 6, "C": 8, "D": 12, "E": 20}
