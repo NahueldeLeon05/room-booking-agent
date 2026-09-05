@@ -13,6 +13,7 @@ from app.infrastructure.models import Base
 
 def pytest_configure() -> None:
     os.environ.setdefault("JWT_SECRET", "test-only-jwt-secret")
+    os.environ.setdefault("OPENAI_API_KEY", "test-only-openai-api-key")
 
 
 @pytest.fixture

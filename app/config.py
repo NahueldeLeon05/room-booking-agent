@@ -12,3 +12,5 @@ DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./app.db")
 JWT_SECRET = os.environ["JWT_SECRET"]
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_HOURS = 24
+OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
