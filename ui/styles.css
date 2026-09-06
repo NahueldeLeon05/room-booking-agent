@@ -359,6 +359,23 @@ textarea {
   font-size: var(--cubo-font-size-body);
 }
 
+.st-key-cubo_login_main [data-testid="stTextInputRootElement"] button {
+  color: #606562 !important;
+  opacity: 1 !important;
+  background: transparent !important;
+}
+
+.st-key-cubo_login_main [data-testid="stTextInputRootElement"] button:hover {
+  color: var(--cubo-text) !important;
+  background: rgba(23, 25, 24, 0.05) !important;
+}
+
+.st-key-cubo_login_main [data-testid="stTextInputRootElement"]
+  [data-testid="stIconMaterial"] {
+  color: inherit !important;
+  opacity: 1 !important;
+}
+
 /* Chrome applies its own background and text colors to saved credentials. */
 .st-key-cubo_login_main input:-webkit-autofill,
 .st-key-cubo_login_main input:-webkit-autofill:hover,

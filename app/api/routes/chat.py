@@ -94,6 +94,8 @@ class BookingSummary(BaseModel):
 
 class ChatResponse(BaseModel):
     response: str
+    # Explicit presentation metadata lets clients render room photos without
+    # trying to infer room names from the assistant's natural-language reply.
     rooms: list[RoomName] = Field(default_factory=list)
     bookings: list[BookingSummary] = Field(default_factory=list)
 
