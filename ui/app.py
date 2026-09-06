@@ -18,6 +18,7 @@ class ApiError(Exception):
 
 
 def main() -> None:
+    st.set_page_config(page_title="CUBO")
     _initialize_session()
 
     if not st.session_state.token:
@@ -35,7 +36,8 @@ def _initialize_session() -> None:
 
 
 def _show_login() -> None:
-    st.title("Room Booking Agent")
+    st.title("CUBO")
+    st.caption("Asistente de reservas de salas de reuniones")
 
     with st.form("login"):
         username = st.text_input("Usuario")
@@ -70,7 +72,8 @@ def _show_login() -> None:
 def _show_chat() -> None:
     title_column, logout_column = st.columns([4, 1])
     with title_column:
-        st.title("Room Booking Agent")
+        st.title("CUBO")
+        st.caption("Asistente de reservas de salas de reuniones")
     with logout_column:
         if st.button("Cerrar sesión"):
             st.session_state.clear()
