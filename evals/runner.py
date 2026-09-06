@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 
 from app.agent.graph import build_graph
-from app.config import OFFICE_TZ, OPENAI_MODEL
+from app.config import AGENT_RECURSION_LIMIT, OFFICE_TZ, OPENAI_MODEL
 from app.infrastructure.database import init_db
 from app.infrastructure.models import Base, UserModel
 from app.infrastructure.repositories.booking_repository import BookingRepository
@@ -155,7 +155,10 @@ def _run_turns(
         input_messages = [*conversation, user_message]
         result = graph.invoke(
             {"messages": input_messages},
-            config={"max_concurrency": 1},
+            config={
+                "max_concurrency": 1,
+                "recursion_limit": AGENT_RECURSION_LIMIT,
+            },
         )
         generated_messages = result["messages"][len(input_messages):]
         last_turn_calls = _tool_calls_from(generated_messages)
