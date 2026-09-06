@@ -359,6 +359,11 @@ textarea {
   font-size: var(--cubo-font-size-body);
 }
 
+.st-key-cubo_login_main input::placeholder {
+  color: #747a76 !important;
+  opacity: 1 !important;
+}
+
 .st-key-cubo_login_main [data-testid="stTextInputRootElement"] button {
   color: #606562 !important;
   opacity: 1 !important;
