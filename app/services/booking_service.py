@@ -210,8 +210,8 @@ class BookingService:
         now: datetime,
     ) -> None:
         validate_slot_alignment(time_range)
-        validate_max_duration(time_range)
         validate_working_day(time_range)
+        validate_max_duration(time_range)
         validate_business_hours(time_range)
         validate_not_in_the_past(time_range, now)
         validate_booking_horizon(time_range, now)

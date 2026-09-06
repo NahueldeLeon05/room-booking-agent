@@ -98,6 +98,19 @@ def test_availability_on_a_weekend_is_rejected(
         service.list_available_rooms(saturday, attendees=2)
 
 
+def test_non_working_day_is_reported_before_excessive_duration(
+    service_and_session: tuple[BookingService, Session],
+) -> None:
+    service, _ = service_and_session
+    sunday = TimeRange(
+        datetime(2026, 9, 13, 16, 0, tzinfo=OFFICE_TZ),
+        datetime(2026, 9, 13, 20, 0, tzinfo=OFFICE_TZ),
+    )
+
+    with pytest.raises(NonWorkingDay):
+        service.list_available_rooms(sunday, attendees=6)
+
+
 def test_room_schedule_returns_merged_taken_and_free_ranges(
     service_and_session: tuple[BookingService, Session],
 ) -> None:
