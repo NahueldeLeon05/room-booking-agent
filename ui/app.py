@@ -142,10 +142,12 @@ def _show_login() -> None:
             with st.form("login", border=False):
                 username = st.text_input(
                     "Usuario",
+                    placeholder="Usuario",
                     autocomplete="username",
                 )
                 password = st.text_input(
                     "Contraseña",
+                    placeholder="Contraseña",
                     type="password",
                     autocomplete="current-password",
                 )
