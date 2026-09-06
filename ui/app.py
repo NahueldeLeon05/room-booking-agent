@@ -234,8 +234,13 @@ def _show_chat() -> None:
 
         for message_index, message in enumerate(st.session_state.messages):
             with st.chat_message(message["role"]):
+                presentation = message.get("presentation", "message")
                 bookings = message.get("bookings", [])
-                if message["role"] == "assistant" and bookings:
+                if (
+                    message["role"] == "assistant"
+                    and presentation == "booking_list"
+                    and bookings
+                ):
                     st.markdown("### Tus reservas activas")
                     _show_booking_list(
                         bookings,
@@ -243,7 +248,10 @@ def _show_chat() -> None:
                     )
                 else:
                     st.markdown(message["content"])
-                if message["role"] == "assistant" and not bookings:
+                if (
+                    message["role"] == "assistant"
+                    and presentation == "room_gallery"
+                ):
                     _show_room_images(
                         message.get("rooms", []),
                         key=f"history_{message_index}",
@@ -296,16 +304,23 @@ def _show_chat() -> None:
                     return
 
                 assistant_message = response["response"]
+                assistant_presentation = response.get(
+                    "presentation",
+                    "message",
+                )
                 assistant_rooms = response.get("rooms", [])
                 assistant_bookings = response.get("bookings", [])
-                if assistant_bookings:
+                if (
+                    assistant_presentation == "booking_list"
+                    and assistant_bookings
+                ):
                     thinking_placeholder.markdown("### Tus reservas activas")
                     _show_booking_list(assistant_bookings, key="current")
-                elif assistant_rooms or _has_structured_markdown(
-                    assistant_message
-                ):
+                elif assistant_presentation == "room_gallery":
                     thinking_placeholder.markdown(assistant_message)
                     _show_room_images(assistant_rooms, key="current")
+                elif _has_structured_markdown(assistant_message):
+                    thinking_placeholder.markdown(assistant_message)
                 else:
                     thinking_placeholder.write_stream(
                         _stream_response(assistant_message),
@@ -325,6 +340,7 @@ def _show_chat() -> None:
     assistant_history_message: dict[str, Any] = {
         "role": "assistant",
         "content": assistant_message,
+        "presentation": assistant_presentation,
     }
     if assistant_rooms:
         assistant_history_message["rooms"] = assistant_rooms

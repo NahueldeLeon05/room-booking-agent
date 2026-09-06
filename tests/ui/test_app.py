@@ -127,7 +127,11 @@ def test_first_turn_keeps_messages_in_conversation_order() -> None:
     assert session_state.messages == [
         {"role": "assistant", "content": app.WELCOME_MESSAGE},
         {"role": "user", "content": "Mostrame mis reservas."},
-        {"role": "assistant", "content": "No tenés reservas activas."},
+        {
+            "role": "assistant",
+            "content": "No tenés reservas activas.",
+            "presentation": "message",
+        },
     ]
     post.assert_called_once_with(
         "/chat",

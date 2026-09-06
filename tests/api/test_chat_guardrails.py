@@ -71,6 +71,7 @@ def test_message_within_limits_is_accepted(
     assert response.status_code == 200
     assert response.json() == {
         "response": "Soy CUBO. ¿En qué puedo ayudarte?",
+        "presentation": "message",
         "rooms": [],
         "bookings": [],
     }

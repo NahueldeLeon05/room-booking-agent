@@ -49,6 +49,8 @@ def test_system_prompt_offers_available_rooms_without_being_asked() -> None:
         "do not ask them to choose a room before showing the tool results"
         in prompt
     )
+    assert "call check_room_availability" in prompt
+    assert "instead of list_available_rooms" in prompt
 
 
 def test_system_prompt_uses_catalog_tool_for_room_browsing() -> None:
@@ -85,6 +87,14 @@ def test_system_prompt_requires_answers_in_spanish() -> None:
     prompt = _system_prompt()
 
     assert "Always answer the user in Spanish" in prompt
+
+
+def test_system_prompt_presents_validation_as_normal_conversation() -> None:
+    prompt = _system_prompt()
+
+    assert "validation failure once" in prompt
+    assert "normal prose" in prompt
+    assert "without using a blockquote" in prompt
 
 
 def test_system_prompt_identifies_the_assistant_as_cubo() -> None:

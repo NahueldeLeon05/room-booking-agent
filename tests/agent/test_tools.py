@@ -2,6 +2,7 @@ import logging
 from datetime import date, datetime
 
 import pytest
+from langchain_core.messages import ToolMessage
 from langchain_core.tools import BaseTool
 
 from app.agent.tools import build_tools
@@ -73,6 +74,7 @@ def test_tool_schemas_do_not_expose_user_id() -> None:
         "list_my_bookings",
         "create_booking",
         "list_available_rooms",
+        "check_room_availability",
         "get_room_schedule",
         "cancel_booking",
     }
@@ -108,6 +110,12 @@ def test_tool_schemas_explain_the_model_facing_formats() -> None:
     assert "list_my_bookings" in cancel_properties[
         "booking_id"
     ]["description"]
+    assert "before the user selects one" in tools[
+        "list_available_rooms"
+    ].description
+    assert "already selected" in tools[
+        "check_room_availability"
+    ].description
 
 
 def test_invalid_tool_arguments_are_returned_as_plain_text() -> None:
@@ -171,6 +179,65 @@ def test_list_rooms_returns_the_configured_catalog() -> None:
     assert "Result: Meeting rooms" in result
     assert "Room A: capacity 4" in result
     assert "Room E: capacity 20" in result
+
+
+def test_room_catalog_carries_structured_gallery_metadata() -> None:
+    service = FakeBookingService()
+    list_rooms = _tool_named(service, "list_rooms", user_id=42)
+
+    result = _invoke_as_tool_call(list_rooms, {})
+
+    assert result.artifact == {
+        "presentation": "room_gallery",
+        "rooms": ["A", "B", "C", "D", "E"],
+        "bookings": [],
+    }
+
+
+def test_selected_available_room_does_not_request_a_gallery() -> None:
+    service = FakeBookingService()
+    check_room = _tool_named(
+        service,
+        "check_room_availability",
+        user_id=42,
+    )
+
+    result = _invoke_as_tool_call(
+        check_room,
+        {
+            "room": "A",
+            "starts_at": "2026-09-07T10:00:00-03:00",
+            "ends_at": "2026-09-07T11:30:00-03:00",
+            "attendees": 4,
+        },
+    )
+
+    assert "Selected room is available" in str(result.content)
+    assert result.artifact["presentation"] == "message"
+    assert result.artifact["rooms"] == []
+
+
+def test_unavailable_selected_room_exposes_alternative_gallery() -> None:
+    service = FakeBookingService()
+    check_room = _tool_named(
+        service,
+        "check_room_availability",
+        user_id=42,
+    )
+
+    result = _invoke_as_tool_call(
+        check_room,
+        {
+            "room": "B",
+            "starts_at": "2026-09-07T10:00:00-03:00",
+            "ends_at": "2026-09-07T11:30:00-03:00",
+            "attendees": 4,
+        },
+    )
+
+    assert "Selected room is not available" in str(result.content)
+    assert result.artifact["presentation"] == "room_gallery"
+    assert result.artifact["rooms"] == ["A"]
 
 
 def test_get_room_details_returns_only_the_requested_room() -> None:
@@ -265,6 +332,22 @@ def _tool_named(
         for built_tool in build_tools(service, user_id)
         if built_tool.name == name
     )
+
+
+def _invoke_as_tool_call(
+    built_tool: BaseTool,
+    arguments: dict[str, object],
+) -> ToolMessage:
+    result = built_tool.invoke(
+        {
+            "name": built_tool.name,
+            "args": arguments,
+            "id": f"call-{built_tool.name}",
+            "type": "tool_call",
+        }
+    )
+    assert isinstance(result, ToolMessage)
+    return result
 
 
 def _booking(user_id: int) -> Booking:

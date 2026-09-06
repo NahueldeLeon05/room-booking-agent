@@ -2,11 +2,17 @@ import logging
 from collections.abc import Callable
 from datetime import date as Date
 from datetime import datetime
-from typing import Literal
+from typing import cast
 
 from langchain_core.tools import BaseTool, tool
 from pydantic import AwareDatetime, BaseModel, Field, ValidationError
 
+from app.agent.artifacts import (
+    BookingArtifact,
+    PresentationArtifact,
+    RoomName,
+    presentation_artifact,
+)
 from app.config import OFFICE_TZ, ROOM_CAPACITIES
 from app.domain.booking import Booking
 from app.domain.exceptions import DomainError
@@ -16,7 +22,7 @@ from app.services.booking_service import BookingService
 
 logger = logging.getLogger(__name__)
 
-RoomName = Literal["A", "B", "C", "D", "E"]
+ToolOutput = tuple[str, PresentationArtifact]
 DATETIME_DESCRIPTION = (
     "ISO 8601 date and time in YYYY-MM-DDTHH:MM:SS-03:00 format, for example "
     "2026-09-07T10:00:00-03:00. It must align to a 30-minute slot, at :00 or "
@@ -41,6 +47,12 @@ class ListAvailableRoomsInput(BaseModel):
     ends_at: AwareDatetime = Field(description=DATETIME_DESCRIPTION)
     attendees: int = Field(
         description="Total number of people who need space in the room."
+    )
+
+
+class CheckRoomAvailabilityInput(ListAvailableRoomsInput):
+    room: RoomName = Field(
+        description="The room already selected by the user."
     )
 
 
@@ -71,55 +83,84 @@ class CancelBookingInput(BaseModel):
 
 
 def build_tools(service: BookingService, user_id: int) -> list[BaseTool]:
-    @tool
-    def list_rooms() -> str:
-        """Use when the user asks which meeting rooms exist or wants the room catalog."""
+    @tool(response_format="content_and_artifact")
+    def list_rooms() -> ToolOutput:
+        """Use when the user asks which rooms exist or wants the catalog."""
 
-        def action() -> str:
+        def action() -> ToolOutput:
             room_lines = [
                 f"Room {name}: capacity {capacity}"
                 for name, capacity in ROOM_CAPACITIES.items()
             ]
-            return _success("Result: Meeting rooms", *room_lines)
+            return (
+                _success("Result: Meeting rooms", *room_lines),
+                presentation_artifact(
+                    "room_gallery",
+                    rooms=[cast(RoomName, name) for name in ROOM_CAPACITIES],
+                ),
+            )
 
         return _execute_tool("list_rooms", {}, action)
 
-    @tool(args_schema=GetRoomDetailsInput)
-    def get_room_details(room: str) -> str:
+    @tool(
+        args_schema=GetRoomDetailsInput,
+        response_format="content_and_artifact",
+    )
+    def get_room_details(room: str) -> ToolOutput:
         """Use when the user asks to see or learn about one specific room."""
 
-        def action() -> str:
-            return _success(
-                "Result: Room details",
-                f"Room {room}: capacity {ROOM_CAPACITIES[room]}",
+        def action() -> ToolOutput:
+            return (
+                _success(
+                    "Result: Room details",
+                    f"Room {room}: capacity {ROOM_CAPACITIES[room]}",
+                ),
+                presentation_artifact(
+                    "room_gallery",
+                    rooms=[cast(RoomName, room)],
+                ),
             )
 
         return _execute_tool("get_room_details", {"room": room}, action)
 
-    @tool
-    def list_my_bookings() -> str:
+    @tool(response_format="content_and_artifact")
+    def list_my_bookings() -> ToolOutput:
         """Use when the user asks to see or recall their active bookings."""
 
-        def action() -> str:
+        def action() -> ToolOutput:
             bookings = service.list_my_bookings(user_id)
             if not bookings:
-                return _success("Result: No active bookings.")
+                return (
+                    _success("Result: No active bookings."),
+                    presentation_artifact("booking_list"),
+                )
 
             lines = ["Result: Active bookings"]
             for booking in bookings:
                 lines.extend(_booking_lines(booking))
-            return _success(*lines)
+            return (
+                _success(*lines),
+                presentation_artifact(
+                    "booking_list",
+                    bookings=[
+                        _booking_artifact(booking) for booking in bookings
+                    ],
+                ),
+            )
 
         return _execute_tool("list_my_bookings", {}, action)
 
-    @tool(args_schema=CreateBookingInput)
+    @tool(
+        args_schema=CreateBookingInput,
+        response_format="content_and_artifact",
+    )
     def create_booking(
         room: str,
         starts_at: datetime,
         ends_at: datetime,
         title: str,
         attendees: int,
-    ) -> str:
+    ) -> ToolOutput:
         """Use only after the user explicitly confirms all booking details."""
         arguments = {
             "room": room,
@@ -129,7 +170,7 @@ def build_tools(service: BookingService, user_id: int) -> list[BaseTool]:
             "attendees": attendees,
         }
 
-        def action() -> str:
+        def action() -> ToolOutput:
             office_start = starts_at.astimezone(OFFICE_TZ)
             office_end = ends_at.astimezone(OFFICE_TZ)
             booking = service.create_booking(
@@ -140,24 +181,33 @@ def build_tools(service: BookingService, user_id: int) -> list[BaseTool]:
                 title=title,
                 attendees=attendees,
             )
-            return _success("Result: Booking created", *_booking_lines(booking))
+            return (
+                _success(
+                    "Result: Booking created",
+                    *_booking_lines(booking),
+                ),
+                presentation_artifact(),
+            )
 
         return _execute_tool("create_booking", arguments, action)
 
-    @tool(args_schema=ListAvailableRoomsInput)
+    @tool(
+        args_schema=ListAvailableRoomsInput,
+        response_format="content_and_artifact",
+    )
     def list_available_rooms(
         starts_at: datetime,
         ends_at: datetime,
         attendees: int,
-    ) -> str:
-        """Use when the user asks which rooms are free for a complete range."""
+    ) -> ToolOutput:
+        """Use to discover free rooms before the user selects one."""
         arguments = {
             "starts_at": starts_at,
             "ends_at": ends_at,
             "attendees": attendees,
         }
 
-        def action() -> str:
+        def action() -> ToolOutput:
             time_range = TimeRange(
                 starts_at=starts_at.astimezone(OFFICE_TZ),
                 ends_at=ends_at.astimezone(OFFICE_TZ),
@@ -167,54 +217,153 @@ def build_tools(service: BookingService, user_id: int) -> list[BaseTool]:
             attendee_line = f"Attendees: {attendees}"
 
             if not rooms:
-                return _success(
-                    "Result: No rooms are available for the full range.",
-                    request_line,
-                    attendee_line,
+                return (
+                    _success(
+                        "Result: No rooms are available for the full range.",
+                        request_line,
+                        attendee_line,
+                    ),
+                    presentation_artifact(),
                 )
 
             room_lines = [
                 f"Room {room.name}: capacity {room.capacity}"
                 for room in rooms
             ]
-            return _success(
-                "Result: Rooms available for the full range",
-                request_line,
-                attendee_line,
-                *room_lines,
+            return (
+                _success(
+                    "Result: Rooms available for the full range",
+                    request_line,
+                    attendee_line,
+                    *room_lines,
+                ),
+                presentation_artifact(
+                    "room_gallery",
+                    rooms=[cast(RoomName, room.name) for room in rooms],
+                ),
             )
 
         return _execute_tool("list_available_rooms", arguments, action)
 
-    @tool(args_schema=GetRoomScheduleInput)
-    def get_room_schedule(room: str, date: Date) -> str:
+    @tool(
+        args_schema=CheckRoomAvailabilityInput,
+        response_format="content_and_artifact",
+    )
+    def check_room_availability(
+        room: str,
+        starts_at: datetime,
+        ends_at: datetime,
+        attendees: int,
+    ) -> ToolOutput:
+        """Use to verify an exact room the user has already selected."""
+        arguments = {
+            "room": room,
+            "starts_at": starts_at,
+            "ends_at": ends_at,
+            "attendees": attendees,
+        }
+
+        def action() -> ToolOutput:
+            time_range = TimeRange(
+                starts_at=starts_at.astimezone(OFFICE_TZ),
+                ends_at=ends_at.astimezone(OFFICE_TZ),
+            )
+            available_rooms = service.list_available_rooms(
+                time_range,
+                attendees,
+            )
+            available_names = [
+                cast(RoomName, available_room.name)
+                for available_room in available_rooms
+            ]
+            request_lines = [
+                f"Selected room: {room}",
+                f"Requested time: {_format_range(time_range)}",
+                f"Attendees: {attendees}",
+            ]
+
+            if room in available_names:
+                return (
+                    _success(
+                        "Result: Selected room is available",
+                        *request_lines,
+                    ),
+                    presentation_artifact(),
+                )
+
+            alternatives = [
+                available_room
+                for available_room in available_rooms
+                if available_room.name != room
+            ]
+            alternative_lines = [
+                f"Room {available_room.name}: "
+                f"capacity {available_room.capacity}"
+                for available_room in alternatives
+            ]
+            return (
+                _success(
+                    "Result: Selected room is not available",
+                    *request_lines,
+                    "Available alternatives:",
+                    *alternative_lines,
+                ),
+                presentation_artifact(
+                    "room_gallery" if alternatives else "message",
+                    rooms=[
+                        cast(RoomName, available_room.name)
+                        for available_room in alternatives
+                    ],
+                ),
+            )
+
+        return _execute_tool(
+            "check_room_availability",
+            arguments,
+            action,
+        )
+
+    @tool(
+        args_schema=GetRoomScheduleInput,
+        response_format="content_and_artifact",
+    )
+    def get_room_schedule(room: str, date: Date) -> ToolOutput:
         """Use when the user asks for the occupied and free times of one room."""
         arguments = {"room": room, "date": date}
 
-        def action() -> str:
+        def action() -> ToolOutput:
             taken_ranges, free_ranges = service.get_room_schedule(room, date)
-            return _success(
-                "Result: Room schedule",
-                f"Room: {room}",
-                f"Date: {date.isoformat()}",
-                "Taken ranges:",
-                *_range_lines(taken_ranges),
-                "Free ranges:",
-                *_range_lines(free_ranges),
+            return (
+                _success(
+                    "Result: Room schedule",
+                    f"Room: {room}",
+                    f"Date: {date.isoformat()}",
+                    "Taken ranges:",
+                    *_range_lines(taken_ranges),
+                    "Free ranges:",
+                    *_range_lines(free_ranges),
+                ),
+                presentation_artifact(),
             )
 
         return _execute_tool("get_room_schedule", arguments, action)
 
-    @tool(args_schema=CancelBookingInput)
-    def cancel_booking(booking_id: int) -> str:
+    @tool(
+        args_schema=CancelBookingInput,
+        response_format="content_and_artifact",
+    )
+    def cancel_booking(booking_id: int) -> ToolOutput:
         """Use only after the user confirms cancelling an identified booking."""
         arguments = {"booking_id": booking_id}
 
-        def action() -> str:
+        def action() -> ToolOutput:
             service.cancel_booking(user_id=user_id, booking_id=booking_id)
-            return _success(
-                "Result: Booking cancelled",
-                f"Booking ID: {booking_id}",
+            return (
+                _success(
+                    "Result: Booking cancelled",
+                    f"Booking ID: {booking_id}",
+                ),
+                presentation_artifact(),
             )
 
         return _execute_tool("cancel_booking", arguments, action)
@@ -225,6 +374,7 @@ def build_tools(service: BookingService, user_id: int) -> list[BaseTool]:
         list_my_bookings,
         create_booking,
         list_available_rooms,
+        check_room_availability,
         get_room_schedule,
         cancel_booking,
     ]
@@ -239,23 +389,25 @@ def build_tools(service: BookingService, user_id: int) -> list[BaseTool]:
 def _execute_tool(
     name: str,
     arguments: dict[str, object],
-    action: Callable[[], str],
-) -> str:
+    action: Callable[[], ToolOutput],
+) -> ToolOutput:
     logger.info("Tool call name=%s arguments=%s", name, arguments)
 
     try:
-        result = action()
+        content, artifact = action()
     except DomainError as error:
-        result = _error(str(error))
+        content = _error(str(error))
+        artifact = presentation_artifact()
     except Exception:
         logger.exception("Unexpected error in tool name=%s", name)
-        result = _error(
+        content = _error(
             "Something went wrong while processing the request. Try again."
         )
+        artifact = presentation_artifact()
 
-    summary = result.splitlines()[1] if "\n" in result else result
+    summary = content.splitlines()[1] if "\n" in content else content
     logger.info("Tool result name=%s summary=%s", name, summary)
-    return result
+    return content, artifact
 
 
 def _validation_error_handler(
@@ -296,6 +448,16 @@ def _booking_lines(booking: Booking) -> list[str]:
         f"Attendees: {booking.attendees}",
         f"Time: {_format_range(booking.time_range)}",
     ]
+
+
+def _booking_artifact(booking: Booking) -> BookingArtifact:
+    return {
+        "booking_id": booking.id,
+        "room": cast(RoomName, booking.room_name),
+        "title": booking.title,
+        "attendees": booking.attendees,
+        "time": _format_range(booking.time_range),
+    }
 
 
 def _range_lines(ranges: list[TimeRange]) -> list[str]:

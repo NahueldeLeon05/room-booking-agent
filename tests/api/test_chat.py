@@ -9,9 +9,8 @@ import app.api.routes.chat as chat_module
 from app.api.routes.chat import (
     ChatHistoryMessage,
     ChatRequest,
-    _bookings_from_tool_results,
     _build_messages,
-    _rooms_from_tool_results,
+    _presentation_from_tool_results,
 )
 from app.config import AGENT_RECURSION_LIMIT
 from app.infrastructure.models import UserModel
@@ -68,6 +67,7 @@ def test_chat_runs_tool_calls_sequentially(
     )
 
     assert response.response == "Listo."
+    assert response.presentation == "message"
     assert response.rooms == []
     assert response.bookings == []
     graph.invoke.assert_called_once()
@@ -104,123 +104,82 @@ def test_recursion_limit_error_returns_conversational_response(
     )
 
 
-def test_available_rooms_are_extracted_from_a_successful_tool_result() -> None:
+def test_room_gallery_is_read_from_structured_tool_artifact() -> None:
     messages = [
         ToolMessage(
-            content=(
-                "Status: success\n"
-                "Result: Rooms available for the full range\n"
-                "Room B: capacity 6\n"
-                "Room D: capacity 12"
-            ),
+            content="The wording is irrelevant to presentation.",
             tool_call_id="available-rooms",
+            artifact={
+                "presentation": "room_gallery",
+                "rooms": ["B", "D"],
+                "bookings": [],
+            },
         ),
     ]
 
-    assert _rooms_from_tool_results(messages) == ["B", "D"]
+    presentation, rooms, bookings = _presentation_from_tool_results(messages)
+
+    assert presentation == "room_gallery"
+    assert rooms == ["B", "D"]
+    assert bookings == []
 
 
-def test_booking_creation_clears_intermediate_availability_images() -> None:
+def test_latest_tool_artifact_replaces_intermediate_presentation() -> None:
     messages = [
         ToolMessage(
-            content=(
-                "Status: success\n"
-                "Result: Rooms available for the full range\n"
-                "Room B: capacity 6\n"
-                "Room D: capacity 12"
-            ),
+            content="Available rooms.",
             tool_call_id="available-rooms",
+            artifact={
+                "presentation": "room_gallery",
+                "rooms": ["C", "D", "E"],
+                "bookings": [],
+            },
         ),
         ToolMessage(
-            content="Status: success\nResult: Booking created\nRoom: B",
-            tool_call_id="created-booking",
-        ),
-    ]
-
-    assert _rooms_from_tool_results(messages) == []
-
-
-def test_room_schedule_clears_intermediate_room_images() -> None:
-    messages = [
-        ToolMessage(
-            content=(
-                "Status: success\n"
-                "Result: Room details\n"
-                "Room E: capacity 20"
-            ),
-            tool_call_id="room-details",
-        ),
-        ToolMessage(
-            content=(
-                "Status: success\n"
-                "Result: Room schedule\n"
-                "Room: E\n"
-                "Date: 2026-09-07"
-            ),
-            tool_call_id="room-schedule",
+            content="The selected room is available.",
+            tool_call_id="check-room",
+            artifact={
+                "presentation": "message",
+                "rooms": [],
+                "bookings": [],
+            },
         ),
     ]
 
-    assert _rooms_from_tool_results(messages) == []
+    presentation, rooms, bookings = _presentation_from_tool_results(messages)
+
+    assert presentation == "message"
+    assert rooms == []
+    assert bookings == []
 
 
-def test_room_catalog_results_are_available_for_visual_presentation() -> None:
+def test_booking_list_is_read_from_structured_tool_artifact() -> None:
     messages = [
         ToolMessage(
-            content=(
-                "Status: success\n"
-                "Result: Meeting rooms\n"
-                "Room A: capacity 4\n"
-                "Room B: capacity 6\n"
-                "Room C: capacity 8\n"
-                "Room D: capacity 12\n"
-                "Room E: capacity 20"
-            ),
-            tool_call_id="room-catalog",
-        )
-    ]
-
-    assert _rooms_from_tool_results(messages) == ["A", "B", "C", "D", "E"]
-
-
-def test_room_details_result_exposes_only_the_requested_room() -> None:
-    messages = [
-        ToolMessage(
-            content=(
-                "Status: success\n"
-                "Result: Room details\n"
-                "Room A: capacity 4"
-            ),
-            tool_call_id="room-details",
-        )
-    ]
-
-    assert _rooms_from_tool_results(messages) == ["A"]
-
-
-def test_active_bookings_are_extracted_for_visual_presentation() -> None:
-    messages = [
-        ToolMessage(
-            content=(
-                "Status: success\n"
-                "Result: Active bookings\n"
-                "Booking ID: 3\n"
-                "Room: A\n"
-                "Title: Planning\n"
-                "Attendees: 4\n"
-                "Time: 2026-09-07 10:00 to 2026-09-07 13:00\n"
-                "Booking ID: 5\n"
-                "Room: C\n"
-                "Title: Daily\n"
-                "Attendees: 3\n"
-                "Time: 2026-09-08 09:00 to 2026-09-08 10:00"
-            ),
+            content="Active bookings.",
             tool_call_id="active-bookings",
-        )
+            artifact={
+                "presentation": "booking_list",
+                "rooms": [],
+                "bookings": [
+                    {
+                        "booking_id": 3,
+                        "room": "A",
+                        "title": "Planning",
+                        "attendees": 4,
+                        "time": (
+                            "2026-09-07 10:00 to 2026-09-07 13:00"
+                        ),
+                    }
+                ],
+            },
+        ),
     ]
 
-    bookings = _bookings_from_tool_results(messages)
+    presentation, rooms, bookings = _presentation_from_tool_results(messages)
 
+    assert presentation == "booking_list"
+    assert rooms == []
     assert [booking.model_dump() for booking in bookings] == [
         {
             "booking_id": 3,
@@ -229,38 +188,10 @@ def test_active_bookings_are_extracted_for_visual_presentation() -> None:
             "attendees": 4,
             "time": "2026-09-07 10:00 to 2026-09-07 13:00",
         },
-        {
-            "booking_id": 5,
-            "room": "C",
-            "title": "Daily",
-            "attendees": 3,
-            "time": "2026-09-08 09:00 to 2026-09-08 10:00",
-        },
     ]
 
 
-def test_cancellation_clears_an_active_booking_snapshot() -> None:
-    messages = [
-        ToolMessage(
-            content=(
-                "Status: success\n"
-                "Result: Active bookings\n"
-                "Booking ID: 1\n"
-                "Room: D\n"
-                "Title: Entrevista Promtior\n"
-                "Attendees: 10\n"
-                "Time: 2026-09-07 10:30 to 2026-09-07 11:00"
-            ),
-            tool_call_id="active-bookings",
-        ),
-        ToolMessage(
-            content=(
-                "Status: success\n"
-                "Result: Booking cancelled\n"
-                "Booking ID: 1"
-            ),
-            tool_call_id="cancel-booking",
-        ),
-    ]
+def test_messages_without_artifacts_use_plain_presentation() -> None:
+    messages = [ToolMessage(content="Legacy result", tool_call_id="legacy")]
 
-    assert _bookings_from_tool_results(messages) == []
+    assert _presentation_from_tool_results(messages) == ("message", [], [])

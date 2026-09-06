@@ -1,6 +1,5 @@
 import logging
-import re
-from typing import Annotated, Literal
+from typing import Annotated, Literal, cast
 
 from fastapi import APIRouter, Depends
 from langchain_core.messages import (
@@ -10,9 +9,15 @@ from langchain_core.messages import (
     ToolMessage,
 )
 from langgraph.errors import GraphRecursionError
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 from sqlalchemy.orm import Session
 
+from app.agent.artifacts import (
+    PRESENTATION_MODES,
+    ROOM_NAMES,
+    PresentationMode,
+    RoomName,
+)
 from app.agent.graph import build_graph
 from app.api.deps import get_current_user
 from app.config import (
@@ -28,31 +33,6 @@ from app.services.booking_service import BookingService
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["chat"])
-RoomName = Literal["A", "B", "C", "D", "E"]
-ROOM_RESULT_PATTERN = re.compile(
-    r"^Room(?::\s*|\s+)([A-E])(?::|$)",
-    re.MULTILINE,
-)
-ROOM_VISUAL_RESULT_MARKERS = (
-    "Result: Meeting rooms",
-    "Result: Room details",
-    "Result: Rooms available for the full range",
-)
-ROOM_VISUAL_RESET_RESULT_MARKERS = (
-    "Result: Booking created",
-    "Result: Booking cancelled",
-    "Result: Room schedule",
-    "Result: Active bookings",
-    "Result: No active bookings",
-)
-BOOKING_RESULT_PATTERN = re.compile(
-    r"^Booking ID: (?P<booking_id>\d+)\n"
-    r"Room: (?P<room>[A-E])\n"
-    r"Title: (?P<title>[^\r\n]+)\n"
-    r"Attendees: (?P<attendees>\d+)\n"
-    r"Time: (?P<time>[^\r\n]+)",
-    re.MULTILINE,
-)
 
 
 class ChatHistoryMessage(BaseModel):
@@ -94,8 +74,7 @@ class BookingSummary(BaseModel):
 
 class ChatResponse(BaseModel):
     response: str
-    # Explicit presentation metadata lets clients render room photos without
-    # trying to infer room names from the assistant's natural-language reply.
+    presentation: PresentationMode = "message"
     rooms: list[RoomName] = Field(default_factory=list)
     bookings: list[BookingSummary] = Field(default_factory=list)
 
@@ -134,11 +113,15 @@ def chat(
         )
     final_message = result["messages"][-1]
     response_text = str(final_message.text)
+    presentation, rooms, bookings = _presentation_from_tool_results(
+        result["messages"]
+    )
 
     return ChatResponse(
         response=response_text,
-        rooms=_rooms_from_tool_results(result["messages"]),
-        bookings=_bookings_from_tool_results(result["messages"]),
+        presentation=presentation,
+        rooms=rooms,
+        bookings=bookings,
     )
 
 
@@ -155,71 +138,40 @@ def _build_messages(request: ChatRequest) -> list[BaseMessage]:
     return messages
 
 
-def _rooms_from_tool_results(messages: list[BaseMessage]) -> list[RoomName]:
-    rooms: list[RoomName] = []
-
-    for message in messages:
-        if not isinstance(message, ToolMessage):
-            continue
-
-        result = str(message.text)
-        if not result.startswith("Status: success"):
-            continue
-
-        if any(
-            marker in result
-            for marker in ROOM_VISUAL_RESET_RESULT_MARKERS
-        ):
-            rooms.clear()
-            continue
-
-        if not any(
-            marker in result for marker in ROOM_VISUAL_RESULT_MARKERS
-        ):
-            continue
-
-        for matched_room in ROOM_RESULT_PATTERN.findall(result):
-            room: RoomName = matched_room
-            if room not in rooms:
-                rooms.append(room)
-
-    return rooms
-
-
-def _bookings_from_tool_results(
+def _presentation_from_tool_results(
     messages: list[BaseMessage],
-) -> list[BookingSummary]:
+) -> tuple[PresentationMode, list[RoomName], list[BookingSummary]]:
+    presentation: PresentationMode = "message"
+    rooms: list[RoomName] = []
     bookings: list[BookingSummary] = []
 
     for message in messages:
         if not isinstance(message, ToolMessage):
             continue
 
-        result = str(message.text)
-        if not result.startswith("Status: success"):
+        artifact = message.artifact
+        if not isinstance(artifact, dict):
             continue
 
-        if (
-            "Result: Booking cancelled" in result
-            or "Result: No active bookings" in result
-        ):
-            bookings.clear()
+        artifact_presentation = artifact.get("presentation")
+        if artifact_presentation not in PRESENTATION_MODES:
             continue
 
-        if "Result: Active bookings" not in result:
-            continue
+        presentation = cast(PresentationMode, artifact_presentation)
+        rooms = []
+        bookings = []
 
-        # A later list result replaces an earlier snapshot from the same turn.
-        bookings.clear()
-        for match in BOOKING_RESULT_PATTERN.finditer(result):
-            bookings.append(
-                BookingSummary(
-                    booking_id=int(match.group("booking_id")),
-                    room=match.group("room"),
-                    title=match.group("title"),
-                    attendees=int(match.group("attendees")),
-                    time=match.group("time"),
-                )
-            )
+        if presentation == "room_gallery":
+            rooms = [
+                room
+                for room in artifact.get("rooms", [])
+                if room in ROOM_NAMES
+            ]
+        elif presentation == "booking_list":
+            for booking in artifact.get("bookings", []):
+                try:
+                    bookings.append(BookingSummary.model_validate(booking))
+                except ValidationError:
+                    logger.warning("Ignored malformed booking artifact")
 
-    return bookings
+    return presentation, rooms, bookings
