@@ -88,9 +88,6 @@ def _show_chat() -> None:
         return
 
     history = list(st.session_state.messages)
-    st.session_state.messages.append(
-        {"role": "user", "content": prompt}
-    )
     with st.chat_message("user"):
         st.markdown(prompt)
 
@@ -109,6 +106,9 @@ def _show_chat() -> None:
         assistant_message = response["response"]
         st.markdown(assistant_message)
 
+    st.session_state.messages.append(
+        {"role": "user", "content": prompt}
+    )
     st.session_state.messages.append(
         {"role": "assistant", "content": assistant_message}
     )
@@ -156,8 +156,37 @@ def _http_error_message(error: HTTPError) -> str:
     detail = body.get("detail")
     if isinstance(detail, str):
         return detail
+    if isinstance(detail, list):
+        return _validation_error_message(detail)
 
     return f"La API devolvió un error ({error.code})."
+
+
+def _validation_error_message(details: list[Any]) -> str:
+    for detail in details:
+        if not isinstance(detail, dict):
+            continue
+
+        location = detail.get("loc", [])
+        context = detail.get("ctx", {})
+        max_length = context.get("max_length")
+
+        if "message" in location and max_length is not None:
+            return (
+                "El mensaje puede tener como máximo "
+                f"{max_length} caracteres."
+            )
+        if "history" in location and max_length is not None:
+            return (
+                "El historial puede tener como máximo "
+                f"{max_length} mensajes."
+            )
+
+        message = detail.get("msg")
+        if isinstance(message, str):
+            return f"La solicitud no es válida: {message}"
+
+    return "La solicitud no es válida."
 
 
 if __name__ == "__main__":
