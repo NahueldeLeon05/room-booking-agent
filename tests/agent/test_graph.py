@@ -12,3 +12,9 @@ def test_system_prompt_requires_answers_in_spanish() -> None:
     prompt = _system_prompt()
 
     assert "Always answer the user in Spanish" in prompt
+
+
+def test_system_prompt_presents_booking_ids_as_user_facing_references() -> None:
+    prompt = _system_prompt()
+
+    assert "Reserva #<id>" in prompt
