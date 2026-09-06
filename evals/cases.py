@@ -346,4 +346,66 @@ CASES = [
             "args_contain": [],
         },
     },
+    {
+        "name": "assistant_introduces_itself_as_cubo",
+        "setup": [],
+        "turns": ["Hola."],
+        "expect": {
+            "must_call": [],
+            "must_not_call": [
+                "list_my_bookings",
+                "create_booking",
+                "list_available_rooms",
+                "get_room_schedule",
+                "cancel_booking",
+            ],
+            "args_contain": [],
+            "response_must_contain": ["CUBO", "reserv", "sala"],
+        },
+    },
+    {
+        "name": "unrelated_requests_are_declined",
+        "setup": [],
+        "turns": ["Dame una receta de flan."],
+        "expect": {
+            "must_call": [],
+            "must_not_call": [
+                "list_my_bookings",
+                "create_booking",
+                "list_available_rooms",
+                "get_room_schedule",
+                "cancel_booking",
+            ],
+            "args_contain": [],
+            "response_must_contain": ["reserv", "sala"],
+            "response_must_not_contain": [
+                "1 taza",
+                "leche condensada",
+                "horne",
+                "180 °c",
+            ],
+        },
+    },
+    {
+        "name": "internet_search_requests_are_declined",
+        "setup": [],
+        "turns": ["Buscá en internet el clima de Tokio para hoy."],
+        "expect": {
+            "must_call": [],
+            "must_not_call": [
+                "list_my_bookings",
+                "create_booking",
+                "list_available_rooms",
+                "get_room_schedule",
+                "cancel_booking",
+            ],
+            "args_contain": [],
+            "response_must_contain": ["reserv", "sala"],
+            "response_must_not_contain": [
+                "°c",
+                "lluvia durante",
+                "estará soleado",
+            ],
+        },
+    },
 ]

@@ -75,7 +75,7 @@ def _run_case(case: dict[str, Any], now: datetime) -> CaseResult:
             _apply_setup(case["setup"], service, user_id)
             graph = build_graph(service, user_id)
             tool_calls, response = _run_turns(graph, case["turns"])
-            failures = _evaluate(case["expect"], tool_calls)
+            failures = _evaluate(case["expect"], tool_calls, response)
             return CaseResult(case["name"], failures, response)
     except Exception as error:
         return CaseResult(
@@ -184,6 +184,7 @@ def _tool_calls_from(messages: list[BaseMessage]) -> list[dict[str, Any]]:
 def _evaluate(
     expect: dict[str, Any],
     tool_calls: list[dict[str, Any]],
+    response: str,
 ) -> list[str]:
     failures: list[str] = []
     called_names = [call["name"] for call in tool_calls]
@@ -232,6 +233,19 @@ def _evaluate(
             failures.append(
                 f"No tool call contained one of the expected argument sets "
                 f"{options}; calls: {tool_calls}."
+            )
+
+    normalized_response = response.casefold()
+    for required_text in expect.get("response_must_contain", []):
+        if required_text.casefold() not in normalized_response:
+            failures.append(
+                f"Expected response to contain {required_text!r}."
+            )
+
+    for forbidden_text in expect.get("response_must_not_contain", []):
+        if forbidden_text.casefold() in normalized_response:
+            failures.append(
+                f"Expected response not to contain {forbidden_text!r}."
             )
 
     return failures
