@@ -34,18 +34,14 @@ binary answer.
 
 ## Model comparison
 
-I ran the same 13 cases multiple times with two models. I counted only runs
-that printed every case and the final summary.
+I ran the current 16-case suite three times with each model. I counted only
+runs that printed every case and the final summary.
 
 | Model | Complete runs | Results | Total |
 |---|---:|---|---:|
-| `gpt-5.6-terra` | 3 | 13/13, 13/13, 13/13 | 39/39 (100%) |
-| `gpt-4o-mini` | 3 | 13/13, 12/13, 12/13 | 37/39 (94.9%) |
+| `gpt-5.6-terra` | 3 | 16/16, 16/16, 16/16 | 48/48 (100%) |
+| `gpt-4o-mini` | 3 | 15/16, 15/16, 15/16 | 45/48 (93.8%) |
 
-One additional Terra run had incomplete console output, so I did not include
-it in the comparison. GPT-4o mini failed the same case twice: a valid booking
-lasting exactly three hours. In one run it changed the requested date, and in
-the other it did not call the required tool.
 
 I selected Terra for the demo because it was more consistent in these runs.
 The trade-off is cost. As of 2026-09-05, the official prices per one million

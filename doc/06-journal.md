@@ -77,7 +77,7 @@ This journal records the work completed each day, the decisions made, the obstac
 - Added booking creation, cancellation, availability, and room schedule queries.
 - Added a LangGraph agent with one tool and tested the full flow from Swagger.
 - Completed the agent with five tools and a minimal Streamlit chat interface.
-- Added 13 real-model evaluation cases and reached 85 passing automated tests.
+- Added a real-model evaluation suite, now with 16 cases.
 
 **Decisions**
 
@@ -116,11 +116,11 @@ This journal records the work completed each day, the decisions made, the obstac
 - Requests from different users are still independent. The database
   `UNIQUE(room_id, slot_start)` constraint continues to handle conflicts
   between simultaneous booking requests.
-- I moved the repeated conversational checks into a separate 13-case eval
-  suite. Across complete runs, Terra passed 39/39 case executions. GPT-4o mini
-  passed 37/39 and failed the valid three-hour booking case twice. I excluded
-  one incomplete Terra run instead of counting a result without a final
-  summary. The comparison and cost trade-off are recorded in `evals/README.md`.
+- I moved the repeated conversational checks into a separate 16-case eval
+  suite and ran it three times with each model. Terra passed 48/48 case
+  executions. GPT-4o mini passed 45/48 and failed the valid three-hour booking
+  case in every run. The comparison and cost trade-off are recorded in
+  `evals/README.md`.
 
 **Dependencies**
 
