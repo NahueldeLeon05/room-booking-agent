@@ -1,5 +1,4 @@
-# Overview
-<!-- Summarize the business rules documented in this file. -->
+# Business rules
 
 ## Rule catalogue
 
@@ -72,11 +71,14 @@ Contiguity is satisfied by construction because a booking is represented by one 
 - A booking exactly 90 days ahead is accepted.
 - A booking 90 days and one slot ahead is rejected.
 
+### R13 — Every booking must have a title
+
+- A booking with a non-empty title is accepted.
+- A booking with an empty title is rejected.
+- A title containing only whitespace is rejected.
+
 ## Validation layer
 
 The domain and application service will validate these rules before writing to the database. The tools and the system prompt can describe the rules, but they are not responsible for enforcing them.
 
 The authenticated session provides `user_id`; the model cannot choose it. The database unique constraint on `(room_id, slot_start)` is the final protection against concurrent reservations. If it raises `IntegrityError`, the application must roll back the transaction and return an actionable error.
-
-## Edge cases
-<!-- Document boundary conditions and exceptional scenarios. -->
