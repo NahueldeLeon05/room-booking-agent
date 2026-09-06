@@ -39,14 +39,6 @@ def test_message_length_error_shows_the_allowed_limit() -> None:
     assert message == "El mensaje puede tener como máximo 2000 caracteres."
 
 
-def test_history_length_error_shows_the_allowed_limit() -> None:
-    error = _validation_http_error("history", 20)
-
-    message = app._http_error_message(error)
-
-    assert message == "El historial puede tener como máximo 20 mensajes."
-
-
 def test_rejected_message_is_not_kept_in_chat_history() -> None:
     session_state = SimpleNamespace(token="token", messages=[])
     thinking_placeholder = Mock()

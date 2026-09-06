@@ -595,12 +595,6 @@ def _validation_error_message(details: list[Any]) -> str:
                 "El mensaje puede tener como máximo "
                 f"{max_length} caracteres."
             )
-        if "history" in location and max_length is not None:
-            return (
-                "El historial puede tener como máximo "
-                f"{max_length} mensajes."
-            )
-
         message = detail.get("msg")
         if isinstance(message, str):
             return f"La solicitud no es válida: {message}"

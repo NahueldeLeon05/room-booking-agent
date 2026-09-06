@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 from langchain_core.messages import AIMessage
 
 import app.api.routes.chat as chat_module
-from app.config import MAX_HISTORY_MESSAGES, MAX_MESSAGE_LENGTH
+from app.config import MAX_MESSAGE_LENGTH
 
 
 def test_message_exceeding_length_limit_is_rejected(
@@ -26,15 +26,22 @@ def test_message_exceeding_length_limit_is_rejected(
     build_graph.assert_not_called()
 
 
-def test_history_exceeding_message_limit_is_rejected(
+def test_history_can_contain_more_than_twenty_messages(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    build_graph = Mock()
-    monkeypatch.setattr(chat_module, "build_graph", build_graph)
+    graph = Mock()
+    graph.invoke.return_value = {
+        "messages": [AIMessage(content="Seguimos conversando.")]
+    }
+    monkeypatch.setattr(
+        chat_module,
+        "build_graph",
+        lambda service, user_id: graph,
+    )
     history = [
         {"role": "user", "content": "Hola."}
-        for _ in range(MAX_HISTORY_MESSAGES + 1)
+        for _ in range(21)
     ]
 
     response = client.post(
@@ -43,9 +50,13 @@ def test_history_exceeding_message_limit_is_rejected(
         headers=_authorization_header(client),
     )
 
-    assert response.status_code == 422
-    assert str(MAX_HISTORY_MESSAGES) in response.text
-    build_graph.assert_not_called()
+    assert response.status_code == 200
+    sent_messages = graph.invoke.call_args.args[0]["messages"]
+    assert len(sent_messages) == 22
+    history_schema = chat_module.ChatRequest.model_json_schema()[
+        "properties"
+    ]["history"]
+    assert "maxItems" not in history_schema
 
 
 def test_message_within_limits_is_accepted(

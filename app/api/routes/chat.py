@@ -22,7 +22,6 @@ from app.agent.graph import build_graph
 from app.api.deps import get_current_user
 from app.config import (
     AGENT_RECURSION_LIMIT,
-    MAX_HISTORY_MESSAGES,
     MAX_MESSAGE_LENGTH,
 )
 from app.infrastructure.database import get_session
@@ -55,11 +54,9 @@ class ChatRequest(BaseModel):
     )
     history: list[ChatHistoryMessage] = Field(
         default_factory=list,
-        max_length=MAX_HISTORY_MESSAGES,
         description=(
-            "Previous user and assistant messages in order. The client must "
-            f"send them again with every request, up to "
-            f"{MAX_HISTORY_MESSAGES} messages."
+            "Previous user and assistant messages in chronological order. "
+            "The client sends them again with every request."
         ),
     )
 
