@@ -91,11 +91,24 @@ This journal records the work completed each day, the decisions made, the obstac
 
 - The application failed during local startup when `JWT_SECRET` and `SEED_USER_PASSWORD` were missing.
 - SQLite returned stored datetimes without timezone information.
+- While testing the real conversation, I asked the agent to cancel two
+  bookings in one message. LangGraph tried to run both tools at the same time.
+  Both tools shared the same SQLAlchemy session, so one cancellation failed
+  halfway and left its slots behind. The same problem could happen when a user
+  asks to create or cancel several bookings in one message.
 
 **Resolution**
 
 - Kept the environment variables required and configured them locally and in Railway.
 - The repository restores `OFFICE_TZ` when mapping database values to the domain.
+- Tool calls now run one at a time inside each chat request. This avoids using
+  the same session from two threads, similar to not sharing one `DbContext`
+  between parallel operations. I added a test that cancels two bookings in one
+  turn and verifies that both bookings are cancelled and no slots are left
+  behind.
+- Requests from different users are still independent. The database
+  `UNIQUE(room_id, slot_start)` constraint continues to handle conflicts
+  between simultaneous booking requests.
 
 **Dependencies**
 
