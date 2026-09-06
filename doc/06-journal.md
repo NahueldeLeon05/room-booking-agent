@@ -128,3 +128,39 @@ This journal records the work completed each day, the decisions made, the obstac
 - `httpx` is used only by FastAPI's `TestClient` during tests.
 - `langgraph` manages the agent and tool loop.
 - `langchain-openai` connects the agent to OpenAI.
+
+### 2026-09-06 — Day 5: Guardrails and delivery review
+
+**Done**
+
+- Added limits for message length, conversation history, and agent recursion.
+- Added server-side validation for empty and whitespace-only booking titles.
+- Audited the repository against the original challenge PDF.
+- Completed the project overview and added the component diagram in Mermaid.
+- Created the Jupyter notebook with real code from the project and verified
+  all nine code cells with a Jupyter kernel.
+
+**Decisions**
+
+- Invalid messages are rejected before reaching OpenAI, so input that is
+  already known to be invalid does not consume model tokens.
+- The graph has a recursion limit so a tool-calling loop cannot continue
+  consuming tokens without a bound.
+- Mermaid was used for the component diagram because it is versioned with the
+  documentation and rendered directly by GitHub.
+
+**Obstacles**
+
+- The API correctly rejected an oversized message with status 422, but
+  Streamlit only showed a generic error and kept the rejected message in the
+  conversation history. The same invalid message could then be sent again with
+  the next request.
+- The coverage audit found that a title was required as a tool argument, but an
+  empty string or whitespace-only value could still reach the database.
+
+**Resolution**
+
+- Streamlit now reads the validation detail returned by the API and only saves
+  a message to the conversation history after a successful response.
+- Title validation is now a pure domain rule called by the service before any
+  database access, with tests for empty and whitespace-only values.
