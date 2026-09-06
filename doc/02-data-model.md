@@ -40,4 +40,4 @@ This guarantee is enforced by the database instead of relying only on an availab
 
 Storing individual slots adds rows to the database, but it makes conflicts simple and safe to enforce with a unique constraint. Checking overlap only with `starts_at` and `ends_at` would use fewer rows, but SQLite could not protect the complete check-and-insert operation with the same simple constraint.
 
-`Base.metadata.create_all()` is used to initialize the challenge database. It is similar to EF Core's `EnsureCreated()`: it creates missing tables, but it does not version or migrate an existing schema. A production system with schema changes would use Alembic migrations.
+`Base.metadata.create_all()` is used to initialize the challenge database.
