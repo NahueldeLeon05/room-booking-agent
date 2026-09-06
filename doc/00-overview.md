@@ -44,6 +44,34 @@ natural language.
 
 ## Component diagram
 
-<!-- Add the diagram showing the flow from the interface to the response. -->
+```mermaid
+flowchart TD
+    U[User] --> ST[Streamlit UI]
+    ST -->|POST /chat<br/>message + history + Bearer token| API[FastAPI]
+
+    API --> AUTH[get_current_user<br/>decodes JWT]
+    AUTH -->|authenticated user| API
+
+    API -->|builds graph| AGENT[LangGraph: agent node]
+    API -.->|user_id injected into tool closures| TOOLS[LangGraph: tools node]
+
+    AGENT -->|messages + tool schemas| LLM[OpenAI]
+    LLM -->|response with tool call intent| AGENT
+    AGENT -->|tool calls| TOOLS
+
+    TOOLS --> SVC[BookingService]
+    SVC --> RULES[Domain rules<br/>pure functions]
+    RULES --> SVC
+    SVC --> REPO[BookingRepository]
+    REPO --> DB[(SQLite<br/>UNIQUE room_id, slot_start)]
+    DB --> REPO
+    REPO --> SVC
+    SVC --> TOOLS
+
+    TOOLS -->|tool result as text| AGENT
+    AGENT -->|final answer| API
+    API --> ST
+    ST --> U
+```
 
 Further documentation: [assumptions](01-assumptions.md), [data model](02-data-model.md), [business rules](03-business-rules.md), [architecture](04-architecture.md), [tool contracts](05-tool-contracts.md), and [development journal](06-journal.md).
