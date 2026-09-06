@@ -53,6 +53,27 @@ def test_system_prompt_requires_answers_in_spanish() -> None:
     assert "Always answer the user in Spanish" in prompt
 
 
+def test_system_prompt_identifies_the_assistant_as_cubo() -> None:
+    prompt = _system_prompt()
+
+    assert "You are CUBO" in prompt
+    assert "introduce yourself as CUBO" in prompt
+
+
+def test_system_prompt_rejects_requests_outside_booking_scope() -> None:
+    prompt = _system_prompt()
+
+    assert "Your scope is limited to meeting-room bookings" in prompt
+    assert "For an unrelated request, do not answer it" in prompt
+
+
+def test_system_prompt_forbids_internet_searches() -> None:
+    prompt = _system_prompt()
+
+    assert "Never browse or search the internet" in prompt
+    assert "Do not answer requests for external information" in prompt
+
+
 def test_system_prompt_presents_booking_ids_as_user_facing_references() -> None:
     prompt = _system_prompt()
 
