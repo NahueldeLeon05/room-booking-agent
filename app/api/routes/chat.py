@@ -196,12 +196,21 @@ def _bookings_from_tool_results(
             continue
 
         result = str(message.text)
-        if not (
-            result.startswith("Status: success")
-            and "Result: Active bookings" in result
-        ):
+        if not result.startswith("Status: success"):
             continue
 
+        if (
+            "Result: Booking cancelled" in result
+            or "Result: No active bookings" in result
+        ):
+            bookings.clear()
+            continue
+
+        if "Result: Active bookings" not in result:
+            continue
+
+        # A later list result replaces an earlier snapshot from the same turn.
+        bookings.clear()
         for match in BOOKING_RESULT_PATTERN.finditer(result):
             bookings.append(
                 BookingSummary(

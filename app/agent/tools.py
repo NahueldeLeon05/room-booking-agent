@@ -207,7 +207,7 @@ def build_tools(service: BookingService, user_id: int) -> list[BaseTool]:
 
     @tool(args_schema=CancelBookingInput)
     def cancel_booking(booking_id: int) -> str:
-        """Use when the user asks to cancel a booking identified from their list."""
+        """Use only after the user confirms cancelling an identified booking."""
         arguments = {"booking_id": booking_id}
 
         def action() -> str:

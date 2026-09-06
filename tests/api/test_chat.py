@@ -237,3 +237,30 @@ def test_active_bookings_are_extracted_for_visual_presentation() -> None:
             "time": "2026-09-08 09:00 to 2026-09-08 10:00",
         },
     ]
+
+
+def test_cancellation_clears_an_active_booking_snapshot() -> None:
+    messages = [
+        ToolMessage(
+            content=(
+                "Status: success\n"
+                "Result: Active bookings\n"
+                "Booking ID: 1\n"
+                "Room: D\n"
+                "Title: Entrevista Promtior\n"
+                "Attendees: 10\n"
+                "Time: 2026-09-07 10:30 to 2026-09-07 11:00"
+            ),
+            tool_call_id="active-bookings",
+        ),
+        ToolMessage(
+            content=(
+                "Status: success\n"
+                "Result: Booking cancelled\n"
+                "Booking ID: 1"
+            ),
+            tool_call_id="cancel-booking",
+        ),
+    ]
+
+    assert _bookings_from_tool_results(messages) == []

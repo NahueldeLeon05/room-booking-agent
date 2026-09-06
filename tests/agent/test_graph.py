@@ -73,6 +73,14 @@ def test_system_prompt_does_not_request_repeated_confirmation() -> None:
     assert "call create_booking in the same turn" in prompt
 
 
+def test_system_prompt_requires_confirmation_before_cancellation() -> None:
+    prompt = _system_prompt()
+
+    assert "Cancelling a booking always requires explicit confirmation" in prompt
+    assert "identifies the booking but is not confirmation" in prompt
+    assert "Do not call cancel_booking until the user confirms" in prompt
+
+
 def test_system_prompt_requires_answers_in_spanish() -> None:
     prompt = _system_prompt()
 
