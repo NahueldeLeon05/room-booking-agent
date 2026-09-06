@@ -1,0 +1,1146 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap");
+
+:root {
+  --cubo-bg-dark: #191b1b;
+  --cubo-bg-light: #f7f6f2;
+  --cubo-bg-surface: #fbfaf7;
+  --cubo-bg-input: #ffffff;
+  --cubo-accent: #4262ff;
+  --cubo-accent-hover: #3150e5;
+  --cubo-accent-active: #2944c7;
+  --cubo-accent-on-dark: #758cff;
+  --cubo-itau-orange: #ff6200;
+  --cubo-text: #171918;
+  --cubo-text-secondary: #5a5d5a;
+  --cubo-text-muted: #6a6d6a;
+  --cubo-text-on-dark: #f7f6f2;
+  --cubo-text-on-dark-muted: rgba(247, 246, 242, 0.66);
+  --cubo-border: #dcdbd4;
+  --cubo-border-subtle: #e4e2da;
+  --cubo-border-on-dark: rgba(255, 255, 255, 0.1);
+  --cubo-user-bubble: #edece7;
+  --cubo-error: #8c4a2b;
+  --cubo-error-border: #e2cdbe;
+  --cubo-error-bg: #faf1ea;
+  --cubo-font-display: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --cubo-font-ui: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --cubo-conversation-width: 680px;
+  --cubo-ease-entrance: cubic-bezier(0.2, 0.6, 0.2, 1);
+}
+
+@keyframes cubo-brand-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes cubo-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes cubo-message-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes cubo-cube-turn {
+  0% { transform: rotate(0deg) scale(0.92); }
+  50% { transform: rotate(180deg) scale(1); }
+  100% { transform: rotate(360deg) scale(0.92); }
+}
+
+@keyframes cubo-thinking-dot-first {
+  0%, 14%, 70%, 100% { opacity: 0; }
+  15%, 69% { opacity: 1; }
+}
+
+@keyframes cubo-thinking-dot-second {
+  0%, 29%, 70%, 100% { opacity: 0; }
+  30%, 69% { opacity: 1; }
+}
+
+@keyframes cubo-thinking-dot-third {
+  0%, 44%, 70%, 100% { opacity: 0; }
+  45%, 69% { opacity: 1; }
+}
+
+@keyframes cubo-spin {
+  to { transform: rotate(360deg); }
+}
+
+* { box-sizing: border-box; }
+
+html,
+body,
+[data-testid="stApp"] {
+  font-family: var(--cubo-font-ui);
+  color: var(--cubo-text);
+}
+
+[data-testid="stAppViewContainer"],
+[data-testid="stMain"] {
+  background: var(--cubo-bg-light);
+}
+
+header[data-testid="stHeader"],
+[data-testid="stToolbar"],
+#MainMenu,
+footer {
+  display: none !important;
+}
+
+/* Streamlit adds link anchors to headings rendered from Markdown. They are
+   useful in documents, but do not belong in this application interface. */
+a[aria-label="Link to heading"] {
+  display: none !important;
+}
+
+.stMainBlockContainer,
+.block-container {
+  width: 100%;
+  max-width: none;
+  padding: 0;
+}
+
+button,
+input,
+textarea {
+  font-family: var(--cubo-font-ui) !important;
+}
+
+/* Shared brand */
+.cubo-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.cubo-logo {
+  display: block;
+  width: 112px;
+  aspect-ratio: 1040.8 / 200;
+  flex: none;
+  overflow: hidden;
+  color: transparent;
+  font-size: 0;
+  background: center / contain no-repeat
+    url("__CUBO_LOGO_DATA_URI__");
+}
+
+.cubo-brand-context {
+  color: var(--cubo-text-on-dark);
+  font-family: var(--cubo-font-display);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  opacity: 0.64;
+}
+
+/* Login layout */
+[data-testid="stHorizontalBlock"]:has(.st-key-cubo_login_aside) {
+  min-height: 100vh;
+  gap: 0;
+  align-items: stretch;
+}
+
+[data-testid="stColumn"]:has(.st-key-cubo_login_aside) {
+  flex: 0 0 45% !important;
+  width: 45% !important;
+  background: var(--cubo-bg-dark);
+}
+
+[data-testid="stColumn"]:has(.st-key-cubo_login_aside)
+  > [data-testid="stVerticalBlock"] {
+  gap: 0;
+}
+
+[data-testid="stColumn"]:has(.st-key-cubo_login_main) {
+  flex: 0 0 55% !important;
+  width: 55% !important;
+  display: flex;
+  padding: 40px;
+  background: var(--cubo-bg-light);
+}
+
+/* Streamlit inserts a full-height vertical block between the column and the
+   keyed login container. Center the wrapper inside that real parent. */
+[data-testid="stColumn"]:has(.st-key-cubo_login_main)
+  > [data-testid="stVerticalBlock"] {
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+}
+
+[data-testid="stColumn"]:has(.st-key-cubo_login_main)
+  > [data-testid="stVerticalBlock"]
+  > [data-testid="stLayoutWrapper"] {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.st-key-cubo_login_aside,
+.st-key-cubo_login_aside > div,
+.st-key-cubo_login_aside [data-testid="stMarkdownContainer"],
+.st-key-cubo_login_aside [data-testid="stHtml"] {
+  height: 100%;
+}
+
+.st-key-cubo_login_aside {
+  position: relative;
+  min-height: 100vh;
+  gap: 0;
+  overflow: hidden;
+  background: var(--cubo-bg-dark);
+}
+
+.st-key-cubo_login_aside::after {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(10, 13, 14, 0.72), rgba(10, 13, 14, 0.46)),
+    linear-gradient(0deg, rgba(10, 13, 14, 0.34), transparent 55%);
+}
+
+.st-key-cubo_login_aside
+  > [data-testid="stElementContainer"]:has(> [data-testid="stVideo"]) {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.st-key-cubo_login_aside [data-testid="stVideo"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 0 !important;
+  filter: saturate(0.72) contrast(1.04);
+  pointer-events: none;
+}
+
+.st-key-cubo_login_aside [data-testid="stVideo"]::-webkit-media-controls {
+  display: none !important;
+}
+
+.st-key-cubo_login_aside [data-testid="stMarkdownContainer"] {
+  position: relative;
+  z-index: 2;
+}
+
+.cubo-login-aside-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  padding: 56px 60px;
+  color: var(--cubo-text-on-dark);
+}
+
+.cubo-login-brand,
+.cubo-login-hero,
+.cubo-login-meta {
+  position: relative;
+  z-index: 1;
+}
+
+.cubo-login-brand {
+  animation: cubo-brand-in 420ms var(--cubo-ease-entrance) 60ms both;
+}
+
+.cubo-login-hero {
+  max-width: 420px;
+}
+
+.cubo-login-hero h2 {
+  margin: 0 0 16px;
+  color: var(--cubo-text-on-dark);
+  font-family: var(--cubo-font-display);
+  font-size: 34px;
+  font-weight: 500;
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+  animation: cubo-rise 480ms var(--cubo-ease-entrance) 160ms both;
+}
+
+.cubo-login-hero p {
+  margin: 0;
+  color: var(--cubo-text-on-dark-muted);
+  font-size: 15px;
+  line-height: 1.7;
+  animation: cubo-rise 480ms var(--cubo-ease-entrance) 240ms both;
+}
+
+.cubo-login-meta {
+  margin: 0;
+  color: var(--cubo-text-on-dark-muted);
+  font-family: var(--cubo-font-display);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  animation: cubo-rise 480ms var(--cubo-ease-entrance) 320ms both;
+}
+
+.st-key-cubo_login_main {
+  width: 100%;
+  max-width: 360px;
+  margin-inline: auto;
+}
+
+.cubo-login-heading {
+  animation: cubo-rise 480ms var(--cubo-ease-entrance) 200ms both;
+}
+
+.st-key-cubo_login_main h1.cubo-login-title {
+  margin: 0 0 26px;
+  color: var(--cubo-text);
+  font-family: var(--cubo-font-display) !important;
+  font-size: 26px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.02em;
+}
+
+.st-key-cubo_login_main [data-testid="stForm"] {
+  padding: 0;
+}
+
+.st-key-cubo_login_main [data-testid="stForm"] > div {
+  gap: 18px;
+}
+
+.st-key-cubo_login_main [data-testid="stTextInput"] {
+  animation: cubo-rise 480ms var(--cubo-ease-entrance) 300ms both;
+}
+
+.st-key-cubo_login_main [data-testid="stTextInput"]:nth-of-type(2) {
+  animation-delay: 360ms;
+}
+
+.st-key-cubo_login_main [data-testid="stWidgetLabel"] p {
+  color: #4a4d4b;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.st-key-cubo_login_main [data-testid="stTextInputRootElement"] {
+  min-height: 46px;
+  border: 1px solid var(--cubo-border);
+  border-radius: 9px;
+  background: var(--cubo-bg-input);
+  box-shadow: none;
+  transition: border-color 140ms ease-out, box-shadow 140ms ease-out;
+}
+
+.st-key-cubo_login_main [data-testid="stTextInputRootElement"]:focus-within {
+  border-color: var(--cubo-accent);
+  box-shadow: 0 0 0 3px rgba(66, 98, 255, 0.16);
+}
+
+.st-key-cubo_login_main input {
+  background: transparent;
+  color: var(--cubo-text);
+  font-size: 15px;
+}
+
+/* Chrome applies its own background and text colors to saved credentials. */
+.st-key-cubo_login_main input:-webkit-autofill,
+.st-key-cubo_login_main input:-webkit-autofill:hover,
+.st-key-cubo_login_main input:-webkit-autofill:focus,
+.st-key-cubo_login_main input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--cubo-text) !important;
+  caret-color: var(--cubo-text);
+  -webkit-box-shadow: 0 0 0 1000px var(--cubo-bg-input) inset !important;
+  box-shadow: 0 0 0 1000px var(--cubo-bg-input) inset !important;
+}
+
+.st-key-cubo_login_main [data-testid="stFormSubmitButton"] {
+  animation: cubo-rise 480ms var(--cubo-ease-entrance) 420ms both;
+}
+
+.st-key-cubo_login_main [data-testid="stFormSubmitButton"] button {
+  min-height: 46px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--cubo-itau-orange);
+  color: white;
+  font-family: var(--cubo-font-display) !important;
+  font-size: 15px;
+  font-weight: 600;
+  transition: background-color 160ms ease, transform 80ms ease;
+}
+
+.st-key-cubo_login_main [data-testid="stFormSubmitButton"] button:hover {
+  background: #e55700;
+}
+
+.st-key-cubo_login_main [data-testid="stFormSubmitButton"] button:active {
+  background: #cc4e00;
+  transform: translateY(1px);
+}
+
+.cubo-login-loading {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.st-key-cubo_login_main:has(.cubo-login-loading)
+  [data-testid="stFormSubmitButton"] button {
+  pointer-events: none;
+  cursor: wait;
+}
+
+.st-key-cubo_login_main:has(.cubo-login-loading)
+  [data-testid="stFormSubmitButton"] button p {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  font-size: 0;
+}
+
+.st-key-cubo_login_main:has(.cubo-login-loading)
+  [data-testid="stFormSubmitButton"] button p::before {
+  content: "";
+  width: 15px;
+  height: 15px;
+  flex: none;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: cubo-spin 700ms linear infinite;
+}
+
+.st-key-cubo_login_main:has(.cubo-login-loading)
+  [data-testid="stFormSubmitButton"] button p::after {
+  content: "Ingresando...";
+  font-size: 15px;
+}
+
+.st-key-cubo_login_main [data-testid="stAlert"] {
+  margin-bottom: 18px;
+  border-left: 2px solid var(--cubo-error-border);
+  border-radius: 0;
+  background: var(--cubo-error-bg);
+  color: var(--cubo-error);
+  animation: cubo-rise 200ms ease-out both;
+}
+
+.cubo-login-hint {
+  margin: 20px 0 0;
+  color: var(--cubo-text-muted);
+  font-size: 12.5px;
+  line-height: 1.6;
+  animation: cubo-rise 480ms var(--cubo-ease-entrance) 480ms both;
+}
+
+.cubo-login-hint strong {
+  color: #4a4d4b;
+  font-family: var(--cubo-font-display);
+  font-weight: 600;
+}
+
+/* Authenticated top bar */
+[data-testid="stSidebar"],
+[data-testid="stSidebarCollapsedControl"] {
+  display: none !important;
+}
+
+.st-key-cubo_topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding: 0 28px;
+  border-bottom: 1px solid var(--cubo-border-on-dark);
+  background: var(--cubo-bg-dark);
+  color: var(--cubo-text-on-dark);
+}
+
+.st-key-cubo_topbar [data-testid="stHorizontalBlock"] {
+  min-height: 64px;
+  gap: 6px;
+  flex-wrap: nowrap;
+  align-items: center;
+}
+
+.st-key-cubo_topbar [data-testid="stColumn"] {
+  min-width: 0;
+}
+
+.st-key-cubo_topbar [data-testid="stMarkdownContainer"] {
+  margin-bottom: 0 !important;
+}
+
+.st-key-cubo_topbar [data-testid="stHtml"] {
+  display: flex;
+  align-items: center;
+}
+
+.st-key-cubo_topbar [data-testid="stColumn"]
+  > [data-testid="stVerticalBlock"] {
+  height: 64px !important;
+  justify-content: center;
+}
+
+.st-key-cubo_topbar [data-testid="stColumn"]:nth-child(1) {
+  width: auto !important;
+  flex: 1 1 auto !important;
+}
+
+.st-key-cubo_topbar [data-testid="stColumn"]:nth-child(2) {
+  width: 32px !important;
+  flex: 0 0 32px !important;
+}
+
+.st-key-cubo_topbar [data-testid="stColumn"]:nth-child(3) {
+  width: 40px !important;
+  flex: 0 0 40px !important;
+}
+
+.cubo-brand-topbar .cubo-logo { width: 82px; }
+
+.cubo-topbar-context {
+  color: var(--cubo-text-on-dark-muted);
+  font-family: var(--cubo-font-display);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}
+
+.cubo-avatar {
+  display: flex;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid rgba(117, 140, 255, 0.45);
+  background: rgba(66, 98, 255, 0.2);
+  color: #dbe1ff;
+  font-family: var(--cubo-font-display);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.cubo-topbar-session {
+  display: flex;
+  width: 32px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+}
+
+.st-key-cubo_topbar button {
+  min-height: 34px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--cubo-text-on-dark-muted);
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+.st-key-cubo_topbar button:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--cubo-text-on-dark);
+}
+
+.st-key-topbar_logout {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.st-key-topbar_logout button {
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0 !important;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  justify-content: center;
+}
+
+.st-key-topbar_logout button:hover {
+  border-color: var(--cubo-border-on-dark);
+}
+
+/* Keep the button label available to assistive technology and show only the
+   logout icon visually. */
+.st-key-topbar_logout [data-testid="stMarkdownContainer"] {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.st-key-topbar_logout [data-testid="stIconMaterial"] {
+  margin: 0;
+  font-size: 19px;
+}
+
+/* Chat shell */
+.st-key-cubo_conversation {
+  width: 100%;
+  max-width: calc(var(--cubo-conversation-width) + 56px);
+  margin: 0 auto;
+  padding: 32px 28px 122px;
+}
+
+.st-key-cubo_conversation > div > [data-testid="stVerticalBlock"] {
+  gap: 22px;
+}
+
+.st-key-cubo_quick_actions {
+  width: 100%;
+  max-width: 620px;
+  margin: clamp(36px, 6vh, 64px) auto 0;
+}
+
+.cubo-quick-actions-label {
+  margin: 0 0 14px;
+  color: var(--cubo-text-muted);
+  font-size: 12.5px;
+  text-align: center;
+}
+
+.st-key-cubo_quick_actions [data-testid="stHorizontalBlock"] {
+  gap: 10px;
+}
+
+.st-key-cubo_quick_actions button {
+  min-height: 40px;
+  border: 1px solid var(--cubo-border);
+  border-radius: 10px;
+  background: var(--cubo-bg-surface);
+  color: var(--cubo-text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: none;
+  transition: border-color 140ms ease, background-color 140ms ease,
+    color 140ms ease;
+}
+
+.st-key-cubo_quick_actions button:hover {
+  border-color: rgba(66, 98, 255, 0.55);
+  background: rgba(66, 98, 255, 0.06);
+  color: var(--cubo-accent-hover);
+}
+
+.cubo-day-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--cubo-text-muted);
+}
+
+.cubo-day-divider::before,
+.cubo-day-divider::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: var(--cubo-border-subtle);
+}
+
+.cubo-day-divider span {
+  font-family: var(--cubo-font-display);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+}
+
+[data-testid="stChatMessage"] {
+  display: flex !important;
+  width: 100% !important;
+  align-items: flex-start;
+  gap: 0;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+[data-testid="stChatMessageAvatarUser"],
+[data-testid="stChatMessageAvatarAssistant"] {
+  display: none;
+}
+
+[data-testid="stChatMessage"]:has([aria-label="Chat message from user"]) {
+  justify-content: flex-end !important;
+  text-align: left;
+}
+
+[data-testid="stChatMessage"]:has([aria-label="Chat message from user"])
+  [data-testid="stChatMessageContent"] {
+  display: flex;
+  width: fit-content !important;
+  max-width: min(78%, 520px);
+  min-height: 44px;
+  flex: 0 1 auto !important;
+  align-items: center;
+  margin-right: 0 !important;
+  margin-left: auto !important;
+  justify-self: end;
+  padding: 10px 17px;
+  border-radius: 13px 13px 4px 13px;
+  background: var(--cubo-user-bubble);
+}
+
+[data-testid="stChatMessage"]:has([aria-label="Chat message from user"])
+  [data-testid="stChatMessageContent"] > [data-testid="stVerticalBlock"] {
+  height: auto !important;
+  gap: 0;
+  justify-content: center;
+}
+
+[data-testid="stChatMessage"]:has([aria-label="Chat message from user"])
+  [data-testid="stChatMessageContent"] p {
+  margin: 0;
+  line-height: 1.45;
+}
+
+[data-testid="stChatMessage"]:has([aria-label="Chat message from assistant"])
+  [data-testid="stChatMessageContent"] {
+  position: relative;
+  width: 100% !important;
+  max-width: 100%;
+  flex: 1 1 auto !important;
+  margin-right: auto !important;
+  margin-left: 0 !important;
+  padding-left: 32px;
+}
+
+[data-testid="stChatMessage"]:has([aria-label="Chat message from assistant"])
+  [data-testid="stChatMessageContent"]::before {
+  content: "";
+  position: absolute;
+  top: 5px;
+  left: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  background: var(--cubo-accent);
+}
+
+[data-testid="stChatMessage"]:has([aria-label="Chat message from assistant"])
+  [data-testid="stChatMessageContent"]::after {
+  content: "";
+  position: absolute;
+  top: 10px;
+  left: 5px;
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid rgba(255, 255, 255, 0.9);
+  border-radius: 2px;
+}
+
+/* A leading Markdown heading has a taller line box than a regular paragraph.
+   Center the assistant mark against the visible heading text. */
+[data-testid="stChatMessage"]:has([aria-label="Chat message from assistant"])
+  [data-testid="stChatMessageContent"]:has(
+    [data-testid="stMarkdownContainer"] > h3:first-child
+  )::before {
+  top: 10px;
+}
+
+[data-testid="stChatMessage"]:has([aria-label="Chat message from assistant"])
+  [data-testid="stChatMessageContent"]:has(
+    [data-testid="stMarkdownContainer"] > h3:first-child
+  )::after {
+  top: 15px;
+}
+
+[data-testid="stChatMessage"]:has(.cubo-thinking)
+  [data-testid="stChatMessageContent"] {
+  padding-left: 0;
+}
+
+[data-testid="stChatMessage"]:has(.cubo-thinking)
+  [data-testid="stChatMessageContent"]::before,
+[data-testid="stChatMessage"]:has(.cubo-thinking)
+  [data-testid="stChatMessageContent"]::after {
+  display: none;
+}
+
+[data-testid="stChatMessageContent"] [data-testid="stMarkdownContainer"] {
+  margin-bottom: 0 !important;
+  color: var(--cubo-text);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+[data-testid="stChatMessageContent"] p {
+  margin: 0 0 12px;
+  line-height: 1.7;
+}
+
+[data-testid="stChatMessageContent"] p:last-child { margin-bottom: 0; }
+
+[data-testid="stChatMessageContent"] h3 {
+  margin: 0 0 12px;
+  color: var(--cubo-text);
+  font-family: var(--cubo-font-display);
+  font-size: 16.5px;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+[data-testid="stChatMessageContent"] h4 {
+  margin: 18px 0 8px;
+  color: var(--cubo-text-muted);
+  font-family: var(--cubo-font-display);
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+[data-testid="stChatMessageContent"] strong {
+  color: var(--cubo-text);
+  font-weight: 600;
+}
+
+[data-testid="stChatMessageContent"] ul,
+[data-testid="stChatMessageContent"] ol {
+  margin: 0 0 12px;
+  padding-left: 22px;
+}
+
+[data-testid="stChatMessageContent"] li {
+  margin-bottom: 6px;
+  line-height: 1.7;
+}
+
+[data-testid="stChatMessageContent"] code {
+  padding: 1px 5px;
+  border: 1px solid var(--cubo-border-subtle);
+  border-radius: 4px;
+  background: #f1f0eb;
+  color: var(--cubo-text);
+  font-size: 13.5px;
+}
+
+[data-testid="stChatMessageContent"] blockquote {
+  margin: 0 0 12px;
+  padding: 4px 0 4px 14px;
+  border-left: 2px solid var(--cubo-error-border);
+  color: var(--cubo-error);
+}
+
+.st-key-cubo_message_enter_user,
+.st-key-cubo_message_enter_assistant {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  animation: cubo-message-in 260ms var(--cubo-ease-entrance) both;
+}
+
+[data-testid="stApp"]:has(.cubo-thinking) .st-key-cubo_quick_actions {
+  display: none;
+}
+
+.cubo-thinking {
+  display: flex;
+  min-height: 28px;
+  align-items: center;
+  gap: 11px;
+}
+
+.cubo-thinking-cube {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  flex: none;
+  border-radius: 5px;
+  background: var(--cubo-accent);
+  animation: cubo-cube-turn 1250ms ease-in-out infinite;
+}
+
+.cubo-thinking-cube::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border: 1.5px solid rgba(255, 255, 255, 0.9);
+  border-radius: 2px;
+}
+
+.cubo-thinking-label {
+  color: var(--cubo-text-muted);
+  font-size: 13px;
+}
+
+.cubo-thinking-dots {
+  display: inline-flex;
+  width: 1.2em;
+}
+
+.cubo-thinking-dots span {
+  opacity: 0;
+  animation-duration: 1600ms;
+  animation-timing-function: steps(1, end);
+  animation-iteration-count: infinite;
+}
+
+.cubo-thinking-dots span:nth-child(1) {
+  animation-name: cubo-thinking-dot-first;
+}
+
+.cubo-thinking-dots span:nth-child(2) {
+  animation-name: cubo-thinking-dot-second;
+}
+
+.cubo-thinking-dots span:nth-child(3) {
+  animation-name: cubo-thinking-dot-third;
+}
+
+/* Streamlit keeps chat_input fixed at the bottom of the main column. */
+div:has(> [data-testid="stBottomBlockContainer"]),
+[data-testid="stBottom"] {
+  border-top: 1px solid var(--cubo-border-subtle);
+  background: var(--cubo-bg-surface) !important;
+}
+
+[data-testid="stBottom"] > div {
+  width: 100%;
+  max-width: calc(var(--cubo-conversation-width) + 56px);
+  margin: 0 auto;
+  padding: 16px 28px 38px;
+}
+
+[data-testid="stBottomBlockContainer"] {
+  width: 100%;
+  max-width: calc(var(--cubo-conversation-width) + 56px);
+  margin: 0 auto;
+  padding: 12px 28px 26px !important;
+  background: var(--cubo-bg-surface) !important;
+}
+
+[data-testid="stChatInput"] {
+  background: transparent !important;
+}
+
+[data-testid="stChatInput"] > div {
+  border: 1px solid var(--cubo-border);
+  border-radius: 12px;
+  background: var(--cubo-bg-input) !important;
+  box-shadow: none;
+  transition: border-color 140ms ease-out, box-shadow 140ms ease-out;
+}
+
+[data-testid="stChatInput"] > div > div,
+[data-testid="stChatInput"] textarea {
+  background: transparent !important;
+}
+
+[data-testid="stChatInput"] > div:focus-within {
+  border-color: var(--cubo-accent);
+  box-shadow: 0 0 0 3px rgba(66, 98, 255, 0.14);
+}
+
+[data-testid="stChatInput"] textarea {
+  color: var(--cubo-text);
+  font-size: 15px;
+}
+
+[data-testid="stChatInput"] textarea::placeholder {
+  color: #777b78;
+  opacity: 1;
+}
+
+[data-testid="stChatInputSubmitButton"] {
+  border-radius: 9px;
+  background: var(--cubo-accent);
+  color: white;
+  transition: background-color 160ms ease, transform 80ms ease;
+}
+
+[data-testid="stChatInputSubmitButton"]:hover {
+  background: var(--cubo-accent-hover);
+}
+
+[data-testid="stChatInputSubmitButton"]:active {
+  background: var(--cubo-accent-active);
+  transform: translateY(1px);
+}
+
+[data-testid="stApp"]:has(.cubo-thinking)
+  [data-testid="stChatInputSubmitButton"] {
+  opacity: 1 !important;
+  background: var(--cubo-accent) !important;
+  color: white !important;
+  cursor: wait;
+}
+
+[data-testid="stApp"]:has(.cubo-thinking)
+  [data-testid="stChatInputSubmitButton"] svg {
+  display: none;
+}
+
+[data-testid="stApp"]:has(.cubo-thinking)
+  [data-testid="stChatInputSubmitButton"]::before {
+  content: "";
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.95);
+  border-radius: 3px;
+  animation: cubo-cube-turn 1250ms ease-in-out infinite;
+}
+
+[data-testid="stChatInput"]::after {
+  content: "CUBO confirma antes de crear o cancelar una reserva.";
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  color: var(--cubo-text-muted);
+  font-size: 12px;
+}
+
+@media (max-width: 1024px) {
+  .cubo-login-aside-content { padding: 44px 40px; }
+  .cubo-login-hero h2 { font-size: 30px; }
+  [data-testid="stColumn"]:has(.st-key-cubo_login_main) { padding: 40px 32px; }
+}
+
+@media (max-width: 768px) {
+  [data-testid="stHorizontalBlock"]:has(.st-key-cubo_login_aside) {
+    flex-direction: column;
+  }
+
+  [data-testid="stColumn"]:has(.st-key-cubo_login_aside),
+  [data-testid="stColumn"]:has(.st-key-cubo_login_main) {
+    width: 100% !important;
+    flex: 0 0 auto !important;
+  }
+
+  [data-testid="stColumn"]:has(.st-key-cubo_login_main) {
+    order: -1;
+    padding: 32px 22px 36px;
+  }
+
+  .st-key-cubo_login_main { max-width: none; }
+
+  .cubo-login-aside-content {
+    min-height: 390px;
+    gap: 24px;
+    padding: 28px 22px 32px;
+  }
+
+  .cubo-login-hero h2 { font-size: 26px; }
+
+  .st-key-cubo_topbar {
+    padding: 0 14px;
+  }
+
+  .st-key-cubo_topbar [data-testid="stHorizontalBlock"] {
+    min-height: 60px;
+    gap: 10px;
+  }
+
+  .st-key-cubo_topbar [data-testid="stColumn"]
+    > [data-testid="stVerticalBlock"] {
+    height: 60px !important;
+  }
+
+  .st-key-cubo_topbar [data-testid="stColumn"] {
+    width: auto !important;
+    min-width: 0 !important;
+  }
+
+  .cubo-topbar-context { display: none; }
+  .st-key-cubo_conversation {
+    padding: 22px 18px 112px;
+  }
+
+  [data-testid="stBottom"] > div {
+    padding: 12px 18px 38px !important;
+  }
+
+  [data-testid="stBottomBlockContainer"] {
+    padding: 10px 0 24px !important;
+  }
+
+  .st-key-cubo_quick_actions [data-testid="stHorizontalBlock"] {
+    flex-direction: column;
+  }
+
+  .st-key-cubo_quick_actions {
+    margin-top: 28px;
+  }
+
+  .st-key-cubo_quick_actions [data-testid="stColumn"] {
+    width: 100% !important;
+    flex: 1 1 auto !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .st-key-cubo_login_main h1.cubo-login-title { font-size: 23px !important; }
+  .cubo-login-hero h2 { font-size: 24px; }
+
+  .st-key-cubo_topbar [data-testid="stColumn"]:nth-child(2) {
+    width: 32px !important;
+    flex: 0 0 32px !important;
+  }
+
+  .st-key-cubo_topbar [data-testid="stColumn"]:nth-child(3) {
+    width: 40px !important;
+    flex: 0 0 40px !important;
+  }
+
+  [data-testid="stChatMessage"]:has([aria-label="Chat message from user"])
+    [data-testid="stChatMessageContent"] {
+    max-width: 86%;
+  }
+
+  [data-testid="stChatMessageContent"] h3 { font-size: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cubo-login-brand,
+  .cubo-login-hero h2,
+  .cubo-login-hero p,
+  .cubo-login-meta,
+  .cubo-login-heading,
+  .st-key-cubo_login_main [data-testid="stTextInput"],
+  .st-key-cubo_login_main [data-testid="stFormSubmitButton"],
+  .cubo-login-hint,
+  .st-key-cubo_message_enter_user,
+  .st-key-cubo_message_enter_assistant {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .cubo-thinking-cube,
+  .cubo-thinking-dots span,
+  [data-testid="stApp"]:has(.cubo-thinking)
+    [data-testid="stChatInputSubmitButton"]::before {
+    animation: none;
+  }
+
+  .st-key-cubo_login_aside [data-testid="stVideo"] {
+    display: none;
+  }
+}

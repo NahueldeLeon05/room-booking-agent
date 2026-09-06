@@ -85,3 +85,11 @@ def test_system_prompt_does_not_infer_public_holiday_closures() -> None:
 
     assert "Public holidays are out of scope" in prompt
     assert "every Monday through Friday as a working day" in prompt
+
+
+def test_system_prompt_requests_safe_readable_markdown() -> None:
+    prompt = _system_prompt()
+
+    assert "Use concise Markdown" in prompt
+    assert "Do not use HTML, tables, or code fences" in prompt
+    assert "**Reserva #<id> — Sala <room>**" in prompt
