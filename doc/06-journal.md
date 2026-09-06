@@ -76,7 +76,8 @@ This journal records the work completed each day, the decisions made, the obstac
 - Added booking-rule validation with explicit boundary tests.
 - Added booking creation, cancellation, availability, and room schedule queries.
 - Added a LangGraph agent with one tool and tested the full flow from Swagger.
-- Reached 66 passing tests.
+- Completed the agent with five tools and a minimal Streamlit chat interface.
+- Added 13 real-model evaluation cases and reached 85 passing automated tests.
 
 **Decisions**
 
@@ -86,6 +87,9 @@ This journal records the work completed each day, the decisions made, the obstac
 - Booking creation inserts without a prior availability query. The database unique constraint decides the conflict and prevents a check-then-act window.
 - A booking that does not belong to the user returns `BookingNotFound`, just like a missing booking. This does not reveal the existence of other users' bookings.
 - Test-only dependencies live in `requirements-dev.txt`, so Railway does not install them in production.
+- Selected `gpt-5.6-terra` for the demo after comparing it with `gpt-4o-mini`
+  using the same evaluation cases. Terra was more consistent, while the model
+  remains configurable through `OPENAI_MODEL`.
 
 **Obstacles**
 
@@ -96,6 +100,9 @@ This journal records the work completed each day, the decisions made, the obstac
   Both tools shared the same SQLAlchemy session, so one cancellation failed
   halfway and left its slots behind. The same problem could happen when a user
   asks to create or cancel several bookings in one message.
+- Manual conversations were useful but hard to compare. The model could behave
+  correctly once and fail with the same request later, so choosing a model by
+  feeling was not enough.
 
 **Resolution**
 
@@ -109,6 +116,11 @@ This journal records the work completed each day, the decisions made, the obstac
 - Requests from different users are still independent. The database
   `UNIQUE(room_id, slot_start)` constraint continues to handle conflicts
   between simultaneous booking requests.
+- I moved the repeated conversational checks into a separate 13-case eval
+  suite. Across complete runs, Terra passed 39/39 case executions. GPT-4o mini
+  passed 37/39 and failed the valid three-hour booking case twice. I excluded
+  one incomplete Terra run instead of counting a result without a final
+  summary. The comparison and cost trade-off are recorded in `evals/README.md`.
 
 **Dependencies**
 
