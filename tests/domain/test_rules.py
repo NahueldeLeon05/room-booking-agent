@@ -15,6 +15,7 @@ from app.domain.exceptions import (
     BookingInThePast,
     BookingTooLong,
     InvalidAttendeeCount,
+    InvalidTitle,
     MisalignedSlot,
     NonWorkingDay,
     OutsideBusinessHours,
@@ -29,6 +30,7 @@ from app.domain.rules import (
     validate_not_in_the_past,
     validate_room_capacity,
     validate_slot_alignment,
+    validate_title,
     validate_working_day,
 )
 from app.domain.time_range import TimeRange
@@ -170,6 +172,16 @@ def test_booking_longer_than_maximum_duration_is_rejected() -> None:
 
     with pytest.raises(BookingTooLong):
         validate_max_duration(time_range)
+
+
+def test_booking_with_a_title_is_accepted() -> None:
+    validate_title("Planning")
+
+
+@pytest.mark.parametrize("title", ["", "   "])
+def test_booking_with_a_blank_title_is_rejected(title: str) -> None:
+    with pytest.raises(InvalidTitle):
+        validate_title(title)
 
 
 def test_booking_with_minimum_attendees_is_accepted() -> None:

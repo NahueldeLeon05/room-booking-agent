@@ -29,6 +29,10 @@ class BookingTooLong(DomainError):
     """Raised when a booking exceeds the maximum duration."""
 
 
+class InvalidTitle(DomainError):
+    """Raised when a booking does not have a meaningful title."""
+
+
 class InvalidAttendeeCount(DomainError):
     """Raised when a booking has fewer than the minimum attendees."""
 

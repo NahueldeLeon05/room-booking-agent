@@ -15,6 +15,7 @@ from app.domain.exceptions import (
     BookingInThePast,
     BookingTooLong,
     InvalidAttendeeCount,
+    InvalidTitle,
     MisalignedSlot,
     NonWorkingDay,
     OutsideBusinessHours,
@@ -75,6 +76,14 @@ def validate_max_duration(time_range: TimeRange) -> None:
         raise BookingTooLong(
             f"Bookings can last at most {MAX_BOOKING_HOURS} hours. "
             "Choose a shorter time range."
+        )
+
+
+def validate_title(title: str) -> None:
+    if not title.strip():
+        raise InvalidTitle(
+            "A booking needs a title. Provide a short description of the "
+            "meeting."
         )
 
 

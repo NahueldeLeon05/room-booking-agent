@@ -26,6 +26,7 @@ from app.domain.rules import (
     validate_not_in_the_past,
     validate_room_capacity,
     validate_slot_alignment,
+    validate_title,
     validate_working_day,
 )
 from app.domain.time_range import TimeRange
@@ -164,6 +165,7 @@ class BookingService:
         ends_at: datetime,
     ) -> Booking:
         time_range = TimeRange(starts_at=starts_at, ends_at=ends_at)
+        validate_title(title)
         self._validate_booking_request(
             time_range,
             attendees,

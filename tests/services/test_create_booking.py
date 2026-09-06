@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.config import OFFICE_TZ
 from app.domain.exceptions import (
+    InvalidTitle,
     RoomCapacityExceeded,
     RoomNotAvailable,
     RoomNotFound,
@@ -150,6 +151,32 @@ def test_booking_exceeding_room_capacity_is_rejected(
             starts_at=datetime(2026, 9, 7, 10, 30, tzinfo=OFFICE_TZ),
             ends_at=datetime(2026, 9, 7, 11, 0, tzinfo=OFFICE_TZ),
         )
+
+
+def test_booking_with_blank_title_is_rejected_before_persistence(
+    service_and_session: tuple[BookingService, Session],
+) -> None:
+    service, session = service_and_session
+
+    with pytest.raises(InvalidTitle):
+        service.create_booking(
+            user_id=_user_id(session, "User1"),
+            room_name="A",
+            title="   ",
+            attendees=2,
+            starts_at=datetime(2026, 9, 7, 10, 30, tzinfo=OFFICE_TZ),
+            ends_at=datetime(2026, 9, 7, 11, 0, tzinfo=OFFICE_TZ),
+        )
+
+    booking_count = session.scalar(
+        select(func.count()).select_from(BookingModel)
+    )
+    slot_count = session.scalar(
+        select(func.count()).select_from(BookingSlotModel)
+    )
+
+    assert booking_count == 0
+    assert slot_count == 0
 
 
 def test_failed_booking_leaves_no_orphan_rows(
