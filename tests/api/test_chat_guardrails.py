@@ -70,7 +70,9 @@ def test_message_within_limits_is_accepted(
 
     assert response.status_code == 200
     assert response.json() == {
-        "response": "Soy CUBO. ¿En qué puedo ayudarte?"
+        "response": "Soy CUBO. ¿En qué puedo ayudarte?",
+        "rooms": [],
+        "bookings": [],
     }
     graph.invoke.assert_called_once()
 

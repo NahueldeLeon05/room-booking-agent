@@ -114,6 +114,7 @@ def test_first_turn_keeps_messages_in_conversation_order() -> None:
         patch.object(app.st, "chat_message", return_value=nullcontext()),
         patch.object(app.st, "empty", return_value=thinking_placeholder),
         patch.object(app.st, "markdown"),
+        patch.object(app, "_show_room_images"),
         patch.object(
             app,
             "_post",
@@ -138,7 +139,25 @@ def test_first_turn_keeps_messages_in_conversation_order() -> None:
         },
         token="token",
     )
+    thinking_placeholder.write_stream.assert_called_once()
     rerun.assert_called_once_with()
+
+
+def test_response_stream_preserves_markdown_and_spacing() -> None:
+    response = "### Disponibilidad\n\n- **Sala A**\n- Sala B"
+
+    with patch.object(app.time, "sleep") as sleep:
+        streamed_response = "".join(app._stream_response(response))
+
+    assert streamed_response == response
+    assert sleep.call_count > 0
+    sleep.assert_called_with(app.RESPONSE_STREAM_DELAY_SECONDS)
+
+
+def test_only_conversational_responses_use_the_typewriter_effect() -> None:
+    assert app._has_structured_markdown("¿Para qué fecha?") is False
+    assert app._has_structured_markdown("### Disponibilidad\n\n- Sala A") is True
+    assert app._has_structured_markdown("1. **Reserva #3**") is True
 
 
 def test_stylesheet_is_loaded_from_the_ui_directory() -> None:
@@ -159,9 +178,35 @@ def test_login_background_video_is_loaded_from_a_local_asset() -> None:
     assert app.LOGIN_VIDEO_PATH.is_file()
 
 
+def test_each_room_has_a_local_image() -> None:
+    assert set(app.ROOM_IMAGE_PATHS) == {"A", "B", "C", "D", "E"}
+    assert all(path.is_file() for path in app.ROOM_IMAGE_PATHS.values())
+
+
+def test_booking_time_is_formatted_for_the_spanish_interface() -> None:
+    assert app._format_booking_time(
+        "2026-09-07 10:00 to 2026-09-07 13:00"
+    ) == "7 de septiembre de 2026, 10:00–13:00"
+
+
 def test_compact_html_preserves_spaces_between_text_lines() -> None:
     markup = "<p>Primera línea.\nSegunda línea.</p>"
 
     assert app._compact_html(markup) == (
         "<p>Primera línea. Segunda línea.</p>"
+    )
+
+
+def test_login_error_uses_integrated_accessible_markup() -> None:
+    placeholder = Mock()
+
+    app._show_login_error(placeholder, "Usuario <inválido>")
+
+    markup = placeholder.markdown.call_args.args[0]
+    assert 'class="cubo-login-error"' in markup
+    assert 'role="alert"' in markup
+    assert "Usuario &lt;inválido&gt;" in markup
+    placeholder.markdown.assert_called_once_with(
+        markup,
+        unsafe_allow_html=True,
     )

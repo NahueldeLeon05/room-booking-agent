@@ -353,6 +353,8 @@ CASES = [
         "expect": {
             "must_call": [],
             "must_not_call": [
+                "list_rooms",
+                "get_room_details",
                 "list_my_bookings",
                 "create_booking",
                 "list_available_rooms",
@@ -370,6 +372,8 @@ CASES = [
         "expect": {
             "must_call": [],
             "must_not_call": [
+                "list_rooms",
+                "get_room_details",
                 "list_my_bookings",
                 "create_booking",
                 "list_available_rooms",
@@ -393,6 +397,8 @@ CASES = [
         "expect": {
             "must_call": [],
             "must_not_call": [
+                "list_rooms",
+                "get_room_details",
                 "list_my_bookings",
                 "create_booking",
                 "list_available_rooms",

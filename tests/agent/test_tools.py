@@ -68,6 +68,8 @@ def test_tool_schemas_do_not_expose_user_id() -> None:
     tools = build_tools(FakeBookingService(), user_id=42)
 
     assert {built_tool.name for built_tool in tools} == {
+        "list_rooms",
+        "get_room_details",
         "list_my_bookings",
         "create_booking",
         "list_available_rooms",
@@ -157,6 +159,30 @@ def test_list_my_bookings_returns_booking_id() -> None:
 
     assert "Status: success" in result
     assert "Booking ID: 7" in result
+
+
+def test_list_rooms_returns_the_configured_catalog() -> None:
+    service = FakeBookingService()
+    list_rooms = _tool_named(service, "list_rooms", user_id=42)
+
+    result = list_rooms.invoke({})
+
+    assert "Status: success" in result
+    assert "Result: Meeting rooms" in result
+    assert "Room A: capacity 4" in result
+    assert "Room E: capacity 20" in result
+
+
+def test_get_room_details_returns_only_the_requested_room() -> None:
+    service = FakeBookingService()
+    get_room_details = _tool_named(service, "get_room_details", user_id=42)
+
+    result = get_room_details.invoke({"room": "C"})
+
+    assert "Status: success" in result
+    assert "Result: Room details" in result
+    assert "Room C: capacity 8" in result
+    assert "Room A:" not in result
 
 
 def test_cancel_booking_uses_authenticated_user_and_returns_booking_id() -> None:

@@ -7,7 +7,7 @@ from typing import Literal
 from langchain_core.tools import BaseTool, tool
 from pydantic import AwareDatetime, BaseModel, Field, ValidationError
 
-from app.config import OFFICE_TZ
+from app.config import OFFICE_TZ, ROOM_CAPACITIES
 from app.domain.booking import Booking
 from app.domain.exceptions import DomainError
 from app.domain.time_range import TimeRange
@@ -44,6 +44,12 @@ class ListAvailableRoomsInput(BaseModel):
     )
 
 
+class GetRoomDetailsInput(BaseModel):
+    room: RoomName = Field(
+        description="One room written as a single uppercase letter from A to E."
+    )
+
+
 class GetRoomScheduleInput(BaseModel):
     room: RoomName = Field(
         description="One room written as a single uppercase letter from A to E."
@@ -65,6 +71,31 @@ class CancelBookingInput(BaseModel):
 
 
 def build_tools(service: BookingService, user_id: int) -> list[BaseTool]:
+    @tool
+    def list_rooms() -> str:
+        """Use when the user asks which meeting rooms exist or wants the room catalog."""
+
+        def action() -> str:
+            room_lines = [
+                f"Room {name}: capacity {capacity}"
+                for name, capacity in ROOM_CAPACITIES.items()
+            ]
+            return _success("Result: Meeting rooms", *room_lines)
+
+        return _execute_tool("list_rooms", {}, action)
+
+    @tool(args_schema=GetRoomDetailsInput)
+    def get_room_details(room: str) -> str:
+        """Use when the user asks to see or learn about one specific room."""
+
+        def action() -> str:
+            return _success(
+                "Result: Room details",
+                f"Room {room}: capacity {ROOM_CAPACITIES[room]}",
+            )
+
+        return _execute_tool("get_room_details", {"room": room}, action)
+
     @tool
     def list_my_bookings() -> str:
         """Use when the user asks to see or recall their active bookings."""
@@ -189,6 +220,8 @@ def build_tools(service: BookingService, user_id: int) -> list[BaseTool]:
         return _execute_tool("cancel_booking", arguments, action)
 
     built_tools = [
+        list_rooms,
+        get_room_details,
         list_my_bookings,
         create_booking,
         list_available_rooms,

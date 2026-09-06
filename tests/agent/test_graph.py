@@ -40,6 +40,32 @@ def test_system_prompt_checks_availability_without_requesting_confirmation() -> 
     assert "check availability immediately" in prompt
 
 
+def test_system_prompt_offers_available_rooms_without_being_asked() -> None:
+    prompt = _system_prompt()
+
+    assert "call list_available_rooms automatically" in prompt
+    assert "even when the room or title is still missing" in prompt
+    assert (
+        "do not ask them to choose a room before showing the tool results"
+        in prompt
+    )
+
+
+def test_system_prompt_uses_catalog_tool_for_room_browsing() -> None:
+    prompt = _system_prompt()
+
+    assert "call list_rooms" in prompt
+    assert "Do not ask for a date, time, or attendee count" in prompt
+    assert "do not call list_available_rooms for a catalog request" in prompt
+
+
+def test_system_prompt_distinguishes_room_details_from_a_schedule() -> None:
+    prompt = _system_prompt()
+
+    assert "call get_room_details" in prompt
+    assert "get_room_schedule only when" in prompt
+
+
 def test_system_prompt_does_not_request_repeated_confirmation() -> None:
     prompt = _system_prompt()
 

@@ -24,6 +24,10 @@
   --cubo-error-bg: #faf1ea;
   --cubo-font-display: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
   --cubo-font-ui: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --cubo-font-size-caption: 12px;
+  --cubo-font-size-ui: 14px;
+  --cubo-font-size-body: 16px;
+  --cubo-font-size-title: 32px;
   --cubo-conversation-width: 680px;
   --cubo-ease-entrance: cubic-bezier(0.2, 0.6, 0.2, 1);
 }
@@ -39,8 +43,8 @@
 }
 
 @keyframes cubo-message-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes cubo-cube-turn {
@@ -68,6 +72,11 @@
   to { transform: rotate(360deg); }
 }
 
+@keyframes cubo-shimmer {
+  from { background-position: 200% 50%; }
+  to { background-position: -200% 50%; }
+}
+
 * { box-sizing: border-box; }
 
 html,
@@ -80,6 +89,10 @@ body,
 [data-testid="stAppViewContainer"],
 [data-testid="stMain"] {
   background: var(--cubo-bg-light);
+}
+
+[data-testid="stMain"] {
+  scrollbar-gutter: stable;
 }
 
 header[data-testid="stHeader"],
@@ -125,15 +138,6 @@ textarea {
   font-size: 0;
   background: center / contain no-repeat
     url("__CUBO_LOGO_DATA_URI__");
-}
-
-.cubo-brand-context {
-  color: var(--cubo-text-on-dark);
-  font-family: var(--cubo-font-display);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  opacity: 0.64;
 }
 
 /* Login layout */
@@ -269,7 +273,7 @@ textarea {
   margin: 0 0 16px;
   color: var(--cubo-text-on-dark);
   font-family: var(--cubo-font-display);
-  font-size: 34px;
+  font-size: var(--cubo-font-size-title);
   font-weight: 500;
   line-height: 1.18;
   letter-spacing: -0.02em;
@@ -279,7 +283,7 @@ textarea {
 .cubo-login-hero p {
   margin: 0;
   color: var(--cubo-text-on-dark-muted);
-  font-size: 15px;
+  font-size: var(--cubo-font-size-body);
   line-height: 1.7;
   animation: cubo-rise 480ms var(--cubo-ease-entrance) 240ms both;
 }
@@ -288,7 +292,7 @@ textarea {
   margin: 0;
   color: var(--cubo-text-on-dark-muted);
   font-family: var(--cubo-font-display);
-  font-size: 11px;
+  font-size: var(--cubo-font-size-caption);
   font-weight: 500;
   letter-spacing: 0.14em;
   animation: cubo-rise 480ms var(--cubo-ease-entrance) 320ms both;
@@ -308,7 +312,7 @@ textarea {
   margin: 0 0 26px;
   color: var(--cubo-text);
   font-family: var(--cubo-font-display) !important;
-  font-size: 26px !important;
+  font-size: var(--cubo-font-size-title) !important;
   font-weight: 600 !important;
   letter-spacing: -0.02em;
 }
@@ -331,7 +335,7 @@ textarea {
 
 .st-key-cubo_login_main [data-testid="stWidgetLabel"] p {
   color: #4a4d4b;
-  font-size: 13px;
+  font-size: var(--cubo-font-size-ui);
   font-weight: 500;
 }
 
@@ -352,7 +356,7 @@ textarea {
 .st-key-cubo_login_main input {
   background: transparent;
   color: var(--cubo-text);
-  font-size: 15px;
+  font-size: var(--cubo-font-size-body);
 }
 
 /* Chrome applies its own background and text colors to saved credentials. */
@@ -377,7 +381,7 @@ textarea {
   background: var(--cubo-itau-orange);
   color: white;
   font-family: var(--cubo-font-display) !important;
-  font-size: 15px;
+  font-size: var(--cubo-font-size-body);
   font-weight: 600;
   transition: background-color 160ms ease, transform 80ms ease;
 }
@@ -404,6 +408,15 @@ textarea {
   [data-testid="stFormSubmitButton"] button {
   pointer-events: none;
   cursor: wait;
+  background-color: var(--cubo-itau-orange);
+  background-image: linear-gradient(
+    110deg,
+    transparent 24%,
+    rgba(255, 255, 255, 0.34) 48%,
+    transparent 72%
+  );
+  background-size: 220% 100%;
+  animation: cubo-shimmer 3200ms linear infinite;
 }
 
 .st-key-cubo_login_main:has(.cubo-login-loading)
@@ -430,30 +443,39 @@ textarea {
 .st-key-cubo_login_main:has(.cubo-login-loading)
   [data-testid="stFormSubmitButton"] button p::after {
   content: "Ingresando...";
-  font-size: 15px;
+  font-size: var(--cubo-font-size-body);
 }
 
-.st-key-cubo_login_main [data-testid="stAlert"] {
-  margin-bottom: 18px;
-  border-left: 2px solid var(--cubo-error-border);
-  border-radius: 0;
-  background: var(--cubo-error-bg);
-  color: var(--cubo-error);
+.cubo-login-error {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 18px;
+  padding: 9px 12px;
+  border: 1px solid #efd7c9;
+  border-left: 3px solid var(--cubo-itau-orange);
+  border-radius: 9px;
+  background: #fff8f4;
+  color: #70432f;
+  font-size: var(--cubo-font-size-ui);
+  line-height: 1.45;
   animation: cubo-rise 200ms ease-out both;
 }
 
-.cubo-login-hint {
-  margin: 20px 0 0;
-  color: var(--cubo-text-muted);
-  font-size: 12.5px;
-  line-height: 1.6;
-  animation: cubo-rise 480ms var(--cubo-ease-entrance) 480ms both;
-}
-
-.cubo-login-hint strong {
-  color: #4a4d4b;
+.cubo-login-error-icon {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 98, 0, 0.12);
+  color: #c94e00;
   font-family: var(--cubo-font-display);
-  font-weight: 600;
+  font-size: var(--cubo-font-size-caption);
+  font-weight: 700;
 }
 
 /* Authenticated top bar */
@@ -463,13 +485,19 @@ textarea {
 }
 
 .st-key-cubo_topbar {
-  position: sticky;
-  top: 0;
-  z-index: 100;
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 1000;
+  width: 100%;
   padding: 0 28px;
   border-bottom: 1px solid var(--cubo-border-on-dark);
   background: var(--cubo-bg-dark);
   color: var(--cubo-text-on-dark);
+}
+
+.stMainBlockContainer:has(.st-key-cubo_topbar),
+.block-container:has(.st-key-cubo_topbar) {
+  padding-top: 64px;
 }
 
 .st-key-cubo_topbar [data-testid="stHorizontalBlock"] {
@@ -515,14 +543,6 @@ textarea {
 
 .cubo-brand-topbar .cubo-logo { width: 82px; }
 
-.cubo-topbar-context {
-  color: var(--cubo-text-on-dark-muted);
-  font-family: var(--cubo-font-display);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-}
-
 .cubo-avatar {
   display: flex;
   width: 30px;
@@ -535,7 +555,7 @@ textarea {
   background: rgba(66, 98, 255, 0.2);
   color: #dbe1ff;
   font-family: var(--cubo-font-display);
-  font-size: 11px;
+  font-size: var(--cubo-font-size-caption);
   font-weight: 600;
 }
 
@@ -553,7 +573,7 @@ textarea {
   border-radius: 8px;
   background: transparent;
   color: var(--cubo-text-on-dark-muted);
-  font-size: 12.5px;
+  font-size: var(--cubo-font-size-ui);
   white-space: nowrap;
 }
 
@@ -621,7 +641,7 @@ textarea {
 .cubo-quick-actions-label {
   margin: 0 0 14px;
   color: var(--cubo-text-muted);
-  font-size: 12.5px;
+  font-size: var(--cubo-font-size-ui);
   text-align: center;
 }
 
@@ -635,7 +655,7 @@ textarea {
   border-radius: 10px;
   background: var(--cubo-bg-surface);
   color: var(--cubo-text-secondary);
-  font-size: 13px;
+  font-size: var(--cubo-font-size-ui);
   font-weight: 500;
   box-shadow: none;
   transition: border-color 140ms ease, background-color 140ms ease,
@@ -665,7 +685,7 @@ textarea {
 
 .cubo-day-divider span {
   font-family: var(--cubo-font-display);
-  font-size: 12px;
+  font-size: var(--cubo-font-size-caption);
   font-weight: 500;
   letter-spacing: 0.14em;
 }
@@ -758,14 +778,16 @@ textarea {
    Center the assistant mark against the visible heading text. */
 [data-testid="stChatMessage"]:has([aria-label="Chat message from assistant"])
   [data-testid="stChatMessageContent"]:has(
-    [data-testid="stMarkdownContainer"] > h3:first-child
+    [data-testid="stMarkdownContainer"]
+      > [data-testid="stHeadingWithActionElements"]:first-child h3
   )::before {
   top: 10px;
 }
 
 [data-testid="stChatMessage"]:has([aria-label="Chat message from assistant"])
   [data-testid="stChatMessageContent"]:has(
-    [data-testid="stMarkdownContainer"] > h3:first-child
+    [data-testid="stMarkdownContainer"]
+      > [data-testid="stHeadingWithActionElements"]:first-child h3
   )::after {
   top: 15px;
 }
@@ -785,7 +807,7 @@ textarea {
 [data-testid="stChatMessageContent"] [data-testid="stMarkdownContainer"] {
   margin-bottom: 0 !important;
   color: var(--cubo-text);
-  font-size: 15px;
+  font-size: var(--cubo-font-size-body);
   line-height: 1.7;
 }
 
@@ -800,7 +822,7 @@ textarea {
   margin: 0 0 12px;
   color: var(--cubo-text);
   font-family: var(--cubo-font-display);
-  font-size: 16.5px;
+  font-size: var(--cubo-font-size-body);
   font-weight: 600;
   line-height: 1.35;
   letter-spacing: -0.01em;
@@ -810,7 +832,7 @@ textarea {
   margin: 18px 0 8px;
   color: var(--cubo-text-muted);
   font-family: var(--cubo-font-display);
-  font-size: 13.5px;
+  font-size: var(--cubo-font-size-ui);
   font-weight: 600;
   line-height: 1.4;
   letter-spacing: 0.06em;
@@ -839,7 +861,7 @@ textarea {
   border-radius: 4px;
   background: #f1f0eb;
   color: var(--cubo-text);
-  font-size: 13.5px;
+  font-size: var(--cubo-font-size-ui);
 }
 
 [data-testid="stChatMessageContent"] blockquote {
@@ -847,6 +869,74 @@ textarea {
   padding: 4px 0 4px 14px;
   border-left: 2px solid var(--cubo-error-border);
   color: var(--cubo-error);
+}
+
+[class*="st-key-cubo_room_gallery_"] {
+  margin-top: 16px;
+}
+
+[class*="st-key-cubo_room_gallery_"] [data-testid="stImage"] {
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+[class*="st-key-cubo_room_gallery_"] [data-testid="stImage"] img {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+}
+
+[class*="st-key-cubo_room_gallery_"] [data-testid="stImageCaption"] {
+  color: var(--cubo-text-muted);
+  font-family: var(--cubo-font-display);
+  font-size: var(--cubo-font-size-caption);
+  font-weight: 600;
+}
+
+[class*="st-key-cubo_room_gallery_"] [data-testid="stImage"] button {
+  display: none;
+}
+
+[class*="st-key-cubo_booking_list_"] {
+  margin-top: 8px;
+}
+
+[class*="st-key-cubo_booking_list_"]
+  > div > [data-testid="stVerticalBlock"] {
+  gap: 0;
+}
+
+[class*="st-key-cubo_booking_row_"] {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--cubo-border-subtle);
+}
+
+[class*="st-key-cubo_booking_row_"]:last-child {
+  border-bottom: 0;
+}
+
+[class*="st-key-cubo_booking_row_"] [data-testid="stHorizontalBlock"] {
+  align-items: center;
+}
+
+[class*="st-key-cubo_booking_row_"] [data-testid="stImage"] {
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+[class*="st-key-cubo_booking_row_"] [data-testid="stImage"] img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+[class*="st-key-cubo_booking_row_"] [data-testid="stImage"] button {
+  display: none;
+}
+
+[class*="st-key-cubo_booking_row_"] [data-testid="stMarkdownContainer"] {
+  font-size: var(--cubo-font-size-ui);
+  line-height: 1.55;
 }
 
 .st-key-cubo_message_enter_user,
@@ -857,7 +947,8 @@ textarea {
   animation: cubo-message-in 260ms var(--cubo-ease-entrance) both;
 }
 
-[data-testid="stApp"]:has(.cubo-thinking) .st-key-cubo_quick_actions {
+[data-testid="stApp"]:has(.st-key-cubo_message_enter_user)
+  .st-key-cubo_quick_actions {
   display: none;
 }
 
@@ -888,7 +979,22 @@ textarea {
 
 .cubo-thinking-label {
   color: var(--cubo-text-muted);
-  font-size: 13px;
+  font-size: var(--cubo-font-size-ui);
+}
+
+.cubo-thinking-shimmer {
+  color: transparent;
+  background-image: linear-gradient(
+    100deg,
+    var(--cubo-text-muted) 30%,
+    var(--cubo-text) 50%,
+    var(--cubo-text-muted) 70%
+  );
+  background-size: 240% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: cubo-shimmer 3800ms ease-in-out infinite;
 }
 
 .cubo-thinking-dots {
@@ -918,8 +1024,8 @@ textarea {
 /* Streamlit keeps chat_input fixed at the bottom of the main column. */
 div:has(> [data-testid="stBottomBlockContainer"]),
 [data-testid="stBottom"] {
-  border-top: 1px solid var(--cubo-border-subtle);
-  background: var(--cubo-bg-surface) !important;
+  border-top: 0;
+  background: var(--cubo-bg-light) !important;
 }
 
 [data-testid="stBottom"] > div {
@@ -934,7 +1040,7 @@ div:has(> [data-testid="stBottomBlockContainer"]),
   max-width: calc(var(--cubo-conversation-width) + 56px);
   margin: 0 auto;
   padding: 12px 28px 26px !important;
-  background: var(--cubo-bg-surface) !important;
+  background: var(--cubo-bg-light) !important;
 }
 
 [data-testid="stChatInput"] {
@@ -961,7 +1067,7 @@ div:has(> [data-testid="stBottomBlockContainer"]),
 
 [data-testid="stChatInput"] textarea {
   color: var(--cubo-text);
-  font-size: 15px;
+  font-size: var(--cubo-font-size-body);
 }
 
 [data-testid="stChatInput"] textarea::placeholder {
@@ -1014,12 +1120,11 @@ div:has(> [data-testid="stBottomBlockContainer"]),
   top: calc(100% + 5px);
   left: 0;
   color: var(--cubo-text-muted);
-  font-size: 12px;
+  font-size: var(--cubo-font-size-caption);
 }
 
 @media (max-width: 1024px) {
   .cubo-login-aside-content { padding: 44px 40px; }
-  .cubo-login-hero h2 { font-size: 30px; }
   [data-testid="stColumn"]:has(.st-key-cubo_login_main) { padding: 40px 32px; }
 }
 
@@ -1047,10 +1152,13 @@ div:has(> [data-testid="stBottomBlockContainer"]),
     padding: 28px 22px 32px;
   }
 
-  .cubo-login-hero h2 { font-size: 26px; }
-
   .st-key-cubo_topbar {
     padding: 0 14px;
+  }
+
+  .stMainBlockContainer:has(.st-key-cubo_topbar),
+  .block-container:has(.st-key-cubo_topbar) {
+    padding-top: 60px;
   }
 
   .st-key-cubo_topbar [data-testid="stHorizontalBlock"] {
@@ -1068,7 +1176,6 @@ div:has(> [data-testid="stBottomBlockContainer"]),
     min-width: 0 !important;
   }
 
-  .cubo-topbar-context { display: none; }
   .st-key-cubo_conversation {
     padding: 22px 18px 112px;
   }
@@ -1096,9 +1203,6 @@ div:has(> [data-testid="stBottomBlockContainer"]),
 }
 
 @media (max-width: 480px) {
-  .st-key-cubo_login_main h1.cubo-login-title { font-size: 23px !important; }
-  .cubo-login-hero h2 { font-size: 24px; }
-
   .st-key-cubo_topbar [data-testid="stColumn"]:nth-child(2) {
     width: 32px !important;
     flex: 0 0 32px !important;
@@ -1114,7 +1218,11 @@ div:has(> [data-testid="stBottomBlockContainer"]),
     max-width: 86%;
   }
 
-  [data-testid="stChatMessageContent"] h3 { font-size: 16px; }
+  [class*="st-key-cubo_booking_row_"]
+    [data-testid="stColumn"]:first-child {
+    display: none;
+  }
+
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1123,9 +1231,9 @@ div:has(> [data-testid="stBottomBlockContainer"]),
   .cubo-login-hero p,
   .cubo-login-meta,
   .cubo-login-heading,
+  .cubo-login-error,
   .st-key-cubo_login_main [data-testid="stTextInput"],
   .st-key-cubo_login_main [data-testid="stFormSubmitButton"],
-  .cubo-login-hint,
   .st-key-cubo_message_enter_user,
   .st-key-cubo_message_enter_assistant {
     animation: none;
@@ -1134,10 +1242,24 @@ div:has(> [data-testid="stBottomBlockContainer"]),
   }
 
   .cubo-thinking-cube,
+  .cubo-thinking-shimmer,
   .cubo-thinking-dots span,
+  .st-key-cubo_login_main:has(.cubo-login-loading)
+    [data-testid="stFormSubmitButton"] button,
   [data-testid="stApp"]:has(.cubo-thinking)
     [data-testid="stChatInputSubmitButton"]::before {
     animation: none;
+  }
+
+  .cubo-thinking-shimmer {
+    color: var(--cubo-text-muted);
+    background: none;
+    -webkit-text-fill-color: currentColor;
+  }
+
+  .st-key-cubo_login_main:has(.cubo-login-loading)
+    [data-testid="stFormSubmitButton"] button {
+    background-image: none;
   }
 
   .st-key-cubo_login_aside [data-testid="stVideo"] {
