@@ -47,7 +47,12 @@ def chat(
     graph = build_graph(service, current_user.id)
     messages = _build_messages(request)
 
-    result = graph.invoke({"messages": messages})
+    # Tool closures share this request's SQLAlchemy Session, which is not
+    # thread-safe. Serialize tool calls when the model requests several.
+    result = graph.invoke(
+        {"messages": messages},
+        config={"max_concurrency": 1},
+    )
     final_message = result["messages"][-1]
 
     return ChatResponse(response=str(final_message.text))
