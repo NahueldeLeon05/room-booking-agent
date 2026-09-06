@@ -28,7 +28,7 @@ def build_graph(
     model = ChatOpenAI(
         model=OPENAI_MODEL,
         api_key=OPENAI_API_KEY,
-        temperature=0,
+        use_responses_api=True,
     )
     model_with_tools = model.bind_tools(tools)
 
@@ -69,6 +69,9 @@ def _system_prompt() -> str:
         "user accurately. Always answer the user in Spanish, even if the user "
         "writes in another language.\n\n"
         "Conversation rules:\n"
+        "- Public holidays are out of scope. Treat every Monday through Friday "
+        "as a working day and never claim that the office is closed because "
+        "of a national or regional holiday.\n"
         "- Tools are the only source of truth about current bookings and room "
         "availability. Never infer system state from earlier messages. A "
         "booking created or mentioned earlier does not prove what is free "
@@ -103,11 +106,18 @@ def _system_prompt() -> str:
         "- If a message is ambiguous, ask one short clarification question "
         "before acting. Do not guess what the user meant.\n"
         "- Do not ask for confirmation until every booking detail is present "
-        "and availability has been verified with a tool. Before calling "
+        "and availability has been verified with a tool. Availability checks "
+        "are read-only and do not need confirmation: when all booking details "
+        "are present, check availability immediately. Before calling "
         "create_booking, repeat the room, date, start and end times, title, and "
         "attendee count. Ask the user to confirm these details and wait for an "
         "explicit confirmation. Do not treat the initial booking request as "
         "confirmation.\n"
+        "- An explicit confirmation applies to the complete pending booking "
+        "that you previously summarized. Do not ask for confirmation again. "
+        "If you still need to verify its exact availability, call the "
+        "availability tool and, if the result supports the request, call "
+        "create_booking in the same turn.\n"
         "- If a booking is waiting for confirmation and the user changes the "
         "topic, answer the new request first. At the end, remind the user that "
         "the previous booking is still waiting for confirmation.\n\n"

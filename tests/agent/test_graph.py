@@ -1,4 +1,29 @@
+from unittest.mock import Mock
+
+import pytest
+
+import app.agent.graph as graph_module
 from app.agent.graph import _system_prompt
+
+
+def test_graph_uses_responses_api(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    model_options: dict[str, object] = {}
+
+    class FakeChatOpenAI:
+        def __init__(self, **options: object) -> None:
+            model_options.update(options)
+
+        def bind_tools(self, tools: list[object]) -> "FakeChatOpenAI":
+            return self
+
+    monkeypatch.setattr(graph_module, "ChatOpenAI", FakeChatOpenAI)
+
+    graph_module.build_graph(Mock(), user_id=1)
+
+    assert model_options["use_responses_api"] is True
+    assert "temperature" not in model_options
 
 
 def test_system_prompt_requires_confirmation_before_booking_creation() -> None:
@@ -6,6 +31,20 @@ def test_system_prompt_requires_confirmation_before_booking_creation() -> None:
 
     assert "Before calling create_booking" in prompt
     assert "wait for an explicit confirmation" in prompt
+
+
+def test_system_prompt_checks_availability_without_requesting_confirmation() -> None:
+    prompt = _system_prompt()
+
+    assert "Availability checks are read-only and do not need confirmation" in prompt
+    assert "check availability immediately" in prompt
+
+
+def test_system_prompt_does_not_request_repeated_confirmation() -> None:
+    prompt = _system_prompt()
+
+    assert "Do not ask for confirmation again" in prompt
+    assert "call create_booking in the same turn" in prompt
 
 
 def test_system_prompt_requires_answers_in_spanish() -> None:
@@ -18,3 +57,10 @@ def test_system_prompt_presents_booking_ids_as_user_facing_references() -> None:
     prompt = _system_prompt()
 
     assert "Reserva #<id>" in prompt
+
+
+def test_system_prompt_does_not_infer_public_holiday_closures() -> None:
+    prompt = _system_prompt()
+
+    assert "Public holidays are out of scope" in prompt
+    assert "every Monday through Friday as a working day" in prompt
