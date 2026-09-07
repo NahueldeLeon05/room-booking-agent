@@ -33,12 +33,15 @@ This journal records the work completed each day, the decisions made, the obstac
 
 **Resolution**
 
-- Use text-only responses with no interactive components. The conversation advances entirely through natural language.
-- If the user has to click to advance, the result is a form with a chat interface placed on top rather than a conversational interface.
+- Keep the interaction entirely in natural language, with no room cards or
+  time-slot buttons that the user must click to advance.
+- If the user has to click to advance, the result is a form with a chat
+  interface placed on top rather than a conversational interface.
 
 **Impact**
 
-- Tools must return information that the model can verbalize, not structures designed to be rendered.
+- Tools must return information that the model can verbalize. Passive visual
+  support may be added later, but it must not become a second interaction flow.
 - Bookings need short, human-referenceable identifiers because the user has to name one in the conversation to cancel it.
 
 ### 2026-09-02 — Day 3: Persistence and early deployment
@@ -76,7 +79,9 @@ This journal records the work completed each day, the decisions made, the obstac
 - Added booking-rule validation with explicit boundary tests.
 - Added booking creation, cancellation, availability, and room schedule queries.
 - Added a LangGraph agent with one tool and tested the full flow from Swagger.
-- Completed the agent with five tools and a minimal Streamlit chat interface.
+- Completed the first agent version with five booking tools and a minimal
+  Streamlit chat interface. The final inventory later grew to eight tools by
+  separating room browsing, room details, and selected-room availability.
 - Added a real-model evaluation suite, now with 16 cases.
 
 **Decisions**
@@ -117,10 +122,10 @@ This journal records the work completed each day, the decisions made, the obstac
   `UNIQUE(room_id, slot_start)` constraint continues to handle conflicts
   between simultaneous booking requests.
 - I moved the repeated conversational checks into a separate 16-case eval
-  suite and ran it three times with each model. Terra passed 48/48 case
+  suite. In the baseline recorded on 2026-09-05, Terra passed 48/48 case
   executions. GPT-4o mini passed 45/48 and failed the valid three-hour booking
   case in every run. The comparison and cost trade-off are recorded in
-  `evals/README.md`.
+  `evals/README.md`, and the versioned runner makes the comparison repeatable.
 
 **Dependencies**
 
@@ -133,12 +138,26 @@ This journal records the work completed each day, the decisions made, the obstac
 
 **Done**
 
-- Added limits for message length, conversation history, and agent recursion.
+- Added limits for message length and agent recursion. A temporary 20-message
+  history cap was removed after end-to-end testing showed that a normal booking
+  conversation reached it too quickly.
 - Added server-side validation for empty and whitespace-only booking titles.
 - Audited the repository against the original challenge PDF.
 - Completed the project overview and added the component diagram in Mermaid.
 - Created the Jupyter notebook with real code from the project and verified
   all nine code cells with a Jupyter kernel.
+- Added an explicit confirmation step before cancellation, matching the safety
+  rule already used for booking creation.
+- Reworked validation failures into concise Spanish responses instead of
+  exposing English domain messages as alert-like UI errors.
+- Added room photographs as passive visual support and a login background
+  video, while preserving natural-language interaction.
+- Replaced prose-based image detection with typed presentation artifacts from
+  the tools. The API now tells Streamlit explicitly whether to render a normal
+  message, a room gallery, or a booking list.
+- Expanded the final tool inventory to eight tools: room catalog, room details,
+  active bookings, creation, room discovery, selected-room availability,
+  schedule, and cancellation.
 
 **Decisions**
 
@@ -148,6 +167,11 @@ This journal records the work completed each day, the decisions made, the obstac
   consuming tokens without a bound.
 - Mermaid was used for the component diagram because it is versioned with the
   documentation and rendered directly by GitHub.
+- Presentation metadata is advisory and never participates in business rules.
+  The service remains the source of truth and every booking action still
+  requires a conversational request.
+- The full conversation is sent to the model without a fixed message-count
+  limit. Per-message validation and the graph recursion limit remain in place.
 
 **Obstacles**
 
@@ -157,6 +181,12 @@ This journal records the work completed each day, the decisions made, the obstac
   the next request.
 - The coverage audit found that a title was required as a tool argument, but an
   empty string or whitespace-only value could still reach the database.
+- Rendering photographs by matching room names in assistant prose caused old
+  images to reappear in confirmations and later messages.
+- Streamlit reruns briefly replaced a streamed response and shifted the page
+  while assistant text was being rendered.
+- After signing out, the login video did not always begin immediately because
+  the original media component was reconstructed during the rerun.
 
 **Resolution**
 
@@ -164,3 +194,11 @@ This journal records the work completed each day, the decisions made, the obstac
   a message to the conversation history after a successful response.
 - Title validation is now a pure domain rule called by the service before any
   database access, with tests for empty and whitespace-only values.
+- Tools return model-facing content plus typed UI artifacts. Streamlit renders
+  only the artifact attached to that response, eliminating image decisions
+  based on prose or previous turns.
+- The response placeholder remains stable while text is streamed, and
+  structured Markdown is rendered in one pass to avoid layout jumps.
+- The login video is served as a native muted, looping, inline HTML video from
+  Streamlit's static directory. This makes browser autoplay behavior consistent
+  on both initial load and logout.

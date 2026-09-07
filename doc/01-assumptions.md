@@ -24,7 +24,7 @@ The example in the challenge (an appointment from 10:00 to 11:30 prevents anothe
 It follows that the interval is half-open: [start, end), with the start included and the end excluded. The consequences for overlap detection are detailed in [03-business-rules.md](03-business-rules.md).
 
 ## Working days
-The challenge defines the business hours, but it does not specify which days the office operates.
+The challenge defines neither business hours nor which days the office operates.
 I assume that bookings can only be made from Monday to Friday. This is consistent with the 08:00 to 20:00 office hours and with a corporate office that does not operate on weekends.
 Therefore, slot generation and booking validation must reject Saturdays and Sundays.
 
@@ -48,6 +48,13 @@ I assume that a room is available only if it is free for the entire requested ti
 Someone asking what is available from 14:00 to 17:00 wants to schedule a three-hour meeting. A room with separate free slots during that range is not useful and listing it would add noise.
 The `get_room_schedule` tool covers the other case by showing the occupied and free slots for one room.
 If no room is free for the complete range, the result is empty. The system must compensate for this with an actionable error that suggests alternatives.
+
+## Room schedule range
+The challenge asks for availability and occupancy over a requested range. I
+decided that `get_room_schedule` returns the complete assumed working day,
+from 08:00 to 20:00, for the requested room and date. This is a deliberate
+superset of any valid requested range: it answers the immediate question while
+also exposing the adjacent free periods without requiring another model call.
 
 ## Additional tools
 The challenge lists four actions and does not include "List my bookings." Without this option, the

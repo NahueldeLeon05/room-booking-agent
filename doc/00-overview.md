@@ -27,10 +27,12 @@ the same SQLAlchemy session, causing one operation to fail halfway. I
 serialized tool calls inside each request and added a test that verifies that
 both bookings are cancelled without leaving occupied slots behind.
 
-I ran the same 16 evaluation cases three times with each model.
-`gpt-5.6-terra` passed 48 out of 48 cases, while `gpt-4o-mini` passed 45 out of
-48. The smaller model failed the exact three-hour booking boundary in every
-run, which gave me a concrete reason to select Terra for the deployed demo.
+In the baseline recorded on 2026-09-05, I ran the same 16 evaluation cases
+three times with each model. `gpt-5.6-terra` passed 48 out of 48 cases, while
+`gpt-4o-mini` passed 45 out of 48. The smaller model failed the exact
+three-hour booking boundary in every run, which gave me a concrete reason to
+select Terra for the deployed demo. The evaluation harness remains versioned
+in the repository so the same comparison can be repeated when needed.
 
 Public holidays, recurring bookings, booking edits, and notifications are
 outside the scope of this solution. They were not required for the core booking
@@ -68,9 +70,10 @@ flowchart TD
     REPO --> SVC
     SVC --> TOOLS
 
-    TOOLS -->|tool result as text| AGENT
+    TOOLS -->|model-facing content| AGENT
+    TOOLS -.->|typed presentation artifact| API
     AGENT -->|final answer| API
-    API --> ST
+    API -->|answer + presentation metadata| ST
     ST --> U
 ```
 

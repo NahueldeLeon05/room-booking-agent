@@ -12,6 +12,7 @@ CASES = [
             "must_call": [
                 {
                     "any_of": [
+                        "check_room_availability",
                         "get_room_schedule",
                         "list_available_rooms",
                     ]
@@ -21,6 +22,15 @@ CASES = [
             "args_contain": [
                 {
                     "any_of": [
+                        {
+                            "tool": "check_room_availability",
+                            "args": {
+                                "room": "A",
+                                "starts_at": "{monday}T10:00:00-03:00",
+                                "ends_at": "{monday}T11:00:00-03:00",
+                                "attendees": 2,
+                            },
+                        },
                         {
                             "tool": "get_room_schedule",
                             "args": {"room": "A", "date": "{monday}"},
@@ -51,6 +61,7 @@ CASES = [
             "must_call": [
                 {
                     "any_of": [
+                        "check_room_availability",
                         "get_room_schedule",
                         "list_available_rooms",
                     ]
@@ -60,6 +71,15 @@ CASES = [
             "args_contain": [
                 {
                     "any_of": [
+                        {
+                            "tool": "check_room_availability",
+                            "args": {
+                                "room": "A",
+                                "starts_at": "{monday}T13:00:00-03:00",
+                                "ends_at": "{monday}T14:00:00-03:00",
+                                "attendees": 2,
+                            },
+                        },
                         {
                             "tool": "get_room_schedule",
                             "args": {"room": "A", "date": "{monday}"},
@@ -100,6 +120,7 @@ CASES = [
             "must_call": [
                 {
                     "any_of": [
+                        "check_room_availability",
                         "get_room_schedule",
                         "list_available_rooms",
                     ]
@@ -109,6 +130,15 @@ CASES = [
             "args_contain": [
                 {
                     "any_of": [
+                        {
+                            "tool": "check_room_availability",
+                            "args": {
+                                "room": "A",
+                                "starts_at": "{monday}T11:30:00-03:00",
+                                "ends_at": "{monday}T12:30:00-03:00",
+                                "attendees": 3,
+                            },
+                        },
                         {
                             "tool": "get_room_schedule",
                             "args": {"room": "A", "date": "{monday}"},
@@ -358,6 +388,7 @@ CASES = [
                 "list_my_bookings",
                 "create_booking",
                 "list_available_rooms",
+                "check_room_availability",
                 "get_room_schedule",
                 "cancel_booking",
             ],
@@ -377,6 +408,7 @@ CASES = [
                 "list_my_bookings",
                 "create_booking",
                 "list_available_rooms",
+                "check_room_availability",
                 "get_room_schedule",
                 "cancel_booking",
             ],
@@ -402,6 +434,7 @@ CASES = [
                 "list_my_bookings",
                 "create_booking",
                 "list_available_rooms",
+                "check_room_availability",
                 "get_room_schedule",
                 "cancel_booking",
             ],

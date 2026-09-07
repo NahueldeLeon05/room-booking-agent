@@ -8,11 +8,13 @@ service and its rules would still work.
 
 ## Layers
 
-- **Streamlit UI:** shows the login and sends the conversation to the API.
-- **FastAPI:** authenticates the user and creates the dependencies for each
-  request.
+- **Streamlit UI:** shows the login, sends the conversation to the API, and
+  renders optional visuals from typed presentation metadata.
+- **FastAPI:** authenticates the user, creates the dependencies for each
+  request, and returns the answer with its presentation metadata.
 - **LangGraph agent:** decides when a tool is needed and returns the final text.
-- **Tools:** translate model arguments into service calls.
+- **Tools:** translate model arguments into service calls and return separate
+  model-facing content and client-facing presentation artifacts.
 - **Service:** coordinates business rules and persistence.
 - **Domain:** contains entities, time ranges, and pure validation functions.
 - **Repository:** maps domain entities to SQLAlchemy models and runs database
@@ -38,8 +40,11 @@ so there are not two copies to maintain.
    never executes Python or accesses the database directly.
 6. A tool calls the service. The service validates the request and the
    repository reads or writes the database.
-7. The tool result returns to the model as text, and the final answer returns
-   to Streamlit.
+7. Each tool returns two channels: concise content for the model and a typed
+   presentation artifact for the client. The artifact never drives business
+   logic; it only describes optional room or booking visuals.
+8. The API returns the final answer together with presentation metadata, and
+   Streamlit renders both from the same tool result.
 
 ## Dependency direction
 
@@ -58,6 +63,8 @@ conversational interface for the challenge. The API does not depend on
 Streamlit, so another client could replace it without changing the domain or
 service.
 
-The conversation uses text instead of cards or time-slot buttons. I wanted the
-user to complete the booking by writing, not by using a form with a chat placed
-on top.
+The booking flow has no room or time-slot controls: the user always advances by
+writing naturally. Room photographs and booking summaries are passive support
+for answers that already exist in text. They are selected from typed tool
+artifacts rather than inferred from the wording of the final answer, so a
+confirmation or unrelated response cannot accidentally repeat old images.

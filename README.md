@@ -17,6 +17,20 @@ calling and server-side validation.
 
 > Reservá la sala C con el título "Entrevista".
 
+## What it supports
+
+- Authenticated sessions for the two challenge users.
+- Catalog and details for rooms A through E, including capacity and photos.
+- Availability searches for an exact time range and attendee count.
+- Free and occupied schedules for a room on a selected date.
+- Booking creation linked to the authenticated user, with explicit
+  confirmation before writing.
+- Active-booking lists and explicit confirmation before cancellation.
+- Server-side enforcement of 30-minute slots, room capacity, working hours,
+  weekdays, a three-hour maximum, future dates, and overlap prevention.
+- Natural-language interaction throughout the flow. Visual room and booking
+  summaries are passive support and never replace the conversation.
+
 ## Stack
 
 | Area | Technology |
@@ -90,6 +104,7 @@ uvicorn app.main:app --reload
 ```
 
 The API documentation is available at <http://127.0.0.1:8000/docs>.
+The health endpoint is available at <http://127.0.0.1:8000/health>.
 
 In a second terminal, activate the same virtual environment and start the UI:
 
@@ -98,6 +113,39 @@ streamlit run ui/app.py
 ```
 
 Streamlit opens at <http://localhost:8501>.
+
+## Deploy to Railway
+
+The deployed application uses two services from the same repository so the
+API and Streamlit can scale and restart independently.
+
+### API service
+
+The API start command is versioned in `railpack.json`:
+
+```bash
+uvicorn app.main:app --host 0.0.0.0 --port $PORT
+```
+
+Configure `DATABASE_URL`, `SEED_USER_PASSWORD`, `JWT_SECRET`, and
+`OPENAI_API_KEY`. `OPENAI_MODEL` is optional. For persistent SQLite storage,
+mount a volume at `/data` and set:
+
+```text
+DATABASE_URL=sqlite:////data/app.db
+```
+
+### UI service
+
+Override the start command for the Streamlit service:
+
+```bash
+streamlit run ui/app.py --server.address 0.0.0.0 --server.port $PORT
+```
+
+Set `API_BASE_URL` to the public URL of the API service. Static serving is
+enabled in `.streamlit/config.toml` so the login video under `ui/static/` is
+available after a fresh page load and after signing out.
 
 ## Tests and evaluations
 
@@ -120,7 +168,8 @@ comparison.
 ## Repository structure
 
 - `app/` — domain rules, services, persistence, API, and LangGraph agent.
-- `ui/` — Streamlit login and conversational interface.
+- `ui/` — Streamlit login, static media, room images, and chat interface.
+- `.streamlit/` — Streamlit server configuration, including static assets.
 - `tests/` — deterministic domain, service, infrastructure, API, and UI tests.
 - `evals/` — real-model conversational evaluation cases and runner.
 - `doc/` — assumptions, data model, business rules, architecture, and journal.

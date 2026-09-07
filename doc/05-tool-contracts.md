@@ -10,11 +10,14 @@ request. A tool does not make business decisions by itself.
 
 | Tool | When it is used | Arguments |
 |---|---|---|
+| `list_rooms` | The user asks which rooms exist or wants to browse the catalog | None |
+| `get_room_details` | The user asks to see or learn about one specific room | `room` |
 | `list_my_bookings` | The user asks for their active bookings | None |
 | `create_booking` | The user confirms all booking details | `room`, `starts_at`, `ends_at`, `title`, `attendees` |
-| `list_available_rooms` | The user asks which rooms are free for a complete range | `starts_at`, `ends_at`, `attendees` |
-| `get_room_schedule` | The user asks for the free and occupied ranges of one room | `room`, `date` |
-| `cancel_booking` | The user asks to cancel one of their bookings | `booking_id` |
+| `list_available_rooms` | The user has not selected a room and asks which ones are free for a complete range | `starts_at`, `ends_at`, `attendees` |
+| `check_room_availability` | The user already selected a room and its exact range must be verified | `room`, `starts_at`, `ends_at`, `attendees` |
+| `get_room_schedule` | The user asks for the free and occupied ranges of one room on a date | `room`, `date` |
+| `cancel_booking` | The user confirms cancellation of an identified booking | `booking_id` |
 
 ## Schemas
 
@@ -40,19 +43,25 @@ service layers.
 ### Arguments vs return values
 
 Tool arguments and return values have different purposes. Arguments use
-structured JSON because the application needs to parse them. Return values are
-read by the model.
+structured JSON because the application needs to parse them. Every tool return
+uses LangChain's `content_and_artifact` format: content is read by the model,
+while the artifact is consumed only by the API and UI.
 
 ### Decision
 
-I decided to return structured and consistent text instead of JSON. Each tool
-uses the same format and includes the booking ID when it is needed.
+I decided to keep model-facing results as short, consistent text and attach a
+typed `PresentationArtifact`. It has one of three explicit modes: `message`,
+`room_gallery`, or `booking_list`, plus the corresponding room names or booking
+summaries.
 
 ### Rationale
 
 Text uses fewer tokens and gives the model less work before answering the user.
-It is also consistent with the conversational interface decision in
-[04-architecture.md](04-architecture.md).
+The artifact lets the UI render photographs and booking summaries without
+parsing natural language or repeating visuals based on stale conversational
+context. This preserves the interaction decision in
+[04-architecture.md](04-architecture.md): visuals are supporting information,
+not controls required to continue the booking flow.
 
 ### Trade-off considered
 
@@ -60,6 +69,26 @@ Short and flat JSON would also work. The problem appears with deeply nested
 JSON and long responses. JSON would be better if the model needed to make
 precise calculations with the data, but the service already does that work
 here.
+
+## Presentation behavior
+
+- `list_rooms` and `get_room_details` request a room gallery.
+- `list_available_rooms` requests a gallery only when it finds candidate rooms.
+- `check_room_availability` returns no gallery when the selected room is free;
+  if it is unavailable, it requests a gallery only for valid alternatives.
+- `list_my_bookings` requests a booking list.
+- Creation, cancellation, schedules, validation errors, and ordinary messages
+  use the `message` presentation.
+
+This contract is the source of truth for visuals. The UI does not search for
+room names or headings in assistant prose.
+
+## Schedule scope
+
+`get_room_schedule` accepts a room and date and returns the complete assumed
+working day, 08:00 to 20:00, grouped into free and occupied ranges. A requested
+subrange is therefore included in the answer, along with adjacent options that
+may help the user choose another time.
 
 ## Error responses
 

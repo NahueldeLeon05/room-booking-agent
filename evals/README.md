@@ -34,8 +34,9 @@ binary answer.
 
 ## Model comparison
 
-I ran the current 16-case suite three times with each model. I counted only
-runs that printed every case and the final summary.
+The following 16-case baseline was recorded on 2026-09-05. I ran it three
+times with each model and counted only runs that printed every case and the
+final summary.
 
 | Model | Complete runs | Results | Total |
 |---|---:|---|---:|
@@ -56,6 +57,9 @@ Terra is about 13 times more expensive for input and 20 times more expensive
 for output. This is acceptable for a low-volume demo, but I would measure the
 quality and cost again before using it for a production workload. The model
 remains configurable through `OPENAI_MODEL`.
+
+The versioned cases and runner make the comparison repeatable when evaluating
+future prompt, tool, or model changes.
 
 Sources: [GPT-5.6 Terra pricing](https://developers.openai.com/api/docs/models/gpt-5.6-terra)
 and [GPT-4o mini pricing](https://developers.openai.com/api/docs/models/gpt-4o-mini).
