@@ -171,7 +171,23 @@ def test_brand_logo_is_loaded_from_a_local_asset() -> None:
 
 def test_login_background_video_is_loaded_from_a_local_asset() -> None:
     assert app.LOGIN_VIDEO_PATH.name == "cubo-office-background.mp4"
+    assert app.LOGIN_VIDEO_PATH.parent.name == "static"
     assert app.LOGIN_VIDEO_PATH.is_file()
+    streamlit_config = (
+        app.STYLES_PATH.parent.parent / ".streamlit" / "config.toml"
+    ).read_text(encoding="utf-8")
+    assert "enableStaticServing = true" in streamlit_config
+
+
+def test_login_video_uses_native_immediate_playback_attributes() -> None:
+    markup = app._login_video_markup()
+
+    assert f'src="{app.LOGIN_VIDEO_URL}"' in markup
+    assert " autoplay " in markup
+    assert " muted " in markup
+    assert " loop " in markup
+    assert " playsinline" in markup
+    assert 'preload="auto"' in markup
 
 
 def test_each_room_has_a_local_image() -> None:

@@ -24,8 +24,10 @@ MARKDOWN_BLOCK_PATTERN = re.compile(
 STYLES_PATH = Path(__file__).with_name("styles.css")
 LOGO_PATH = Path(__file__).with_name("assets") / "cubo-itau-logo.svg"
 LOGIN_VIDEO_PATH = (
-    Path(__file__).with_name("assets") / "cubo-office-background.mp4"
+    Path(__file__).with_name("static")
+    / "cubo-office-background.mp4"
 )
+LOGIN_VIDEO_URL = "/app/static/cubo-office-background.mp4"
 ROOM_IMAGE_PATHS = {
     room: Path(__file__).with_name("assets")
     / "rooms"
@@ -115,12 +117,8 @@ def _show_login() -> None:
 
     with aside_column:
         with st.container(key="cubo_login_aside"):
-            st.video(
-                str(LOGIN_VIDEO_PATH),
-                autoplay=True,
-                muted=True,
-                loop=True,
-                width="stretch",
+            st.html(
+                _compact_html(_login_video_markup()),
             )
             st.markdown(
                 _compact_html(_login_aside_markup()),
@@ -507,6 +505,15 @@ def _show_topbar(username: str) -> bool:
             )
 
     return logout
+
+
+def _login_video_markup() -> str:
+    return f"""
+        <video class="cubo-login-video" autoplay muted loop playsinline
+               preload="auto" aria-hidden="true" tabindex="-1">
+            <source src="{LOGIN_VIDEO_URL}" type="video/mp4">
+        </video>
+    """
 
 
 def _login_aside_markup() -> str:
