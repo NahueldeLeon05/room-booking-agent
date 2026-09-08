@@ -173,6 +173,9 @@ def test_login_background_video_is_loaded_from_a_local_asset() -> None:
     assert app.LOGIN_VIDEO_PATH.name == "cubo-office-background.mp4"
     assert app.LOGIN_VIDEO_PATH.parent.name == "static"
     assert app.LOGIN_VIDEO_PATH.is_file()
+    assert app.LOGIN_VIDEO_URL.endswith(
+        f"?v={app.LOGIN_VIDEO_REVISION}"
+    )
     streamlit_config = (
         app.STYLES_PATH.parent.parent / ".streamlit" / "config.toml"
     ).read_text(encoding="utf-8")
@@ -188,6 +191,12 @@ def test_login_video_uses_native_immediate_playback_attributes() -> None:
     assert " loop " in markup
     assert " playsinline" in markup
     assert 'preload="auto"' in markup
+    assert "video.defaultMuted = true" in markup
+    assert "video.muted = true" in markup
+    assert "video.play()" in markup
+    assert 'document.addEventListener("visibilitychange"' in markup
+    assert '"(prefers-reduced-motion: reduce)"' in markup
+    assert 'video.removeAttribute("autoplay")' in markup
 
 
 def test_each_room_has_a_local_image() -> None:

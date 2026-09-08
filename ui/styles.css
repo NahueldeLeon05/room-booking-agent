@@ -1285,7 +1285,4 @@ div:has(> [data-testid="stBottomBlockContainer"]),
     background-image: none;
   }
 
-  .cubo-login-video {
-    display: none;
-  }
 }

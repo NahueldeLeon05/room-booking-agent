@@ -5,6 +5,7 @@ import time
 from base64 import b64encode
 from collections.abc import Iterator
 from datetime import datetime
+from hashlib import sha256
 from html import escape
 from pathlib import Path
 from typing import Any
@@ -27,7 +28,11 @@ LOGIN_VIDEO_PATH = (
     Path(__file__).with_name("static")
     / "cubo-office-background.mp4"
 )
-LOGIN_VIDEO_URL = "/app/static/cubo-office-background.mp4"
+LOGIN_VIDEO_REVISION = sha256(LOGIN_VIDEO_PATH.read_bytes()).hexdigest()[:12]
+LOGIN_VIDEO_URL = (
+    "/app/static/cubo-office-background.mp4"
+    f"?v={LOGIN_VIDEO_REVISION}"
+)
 ROOM_IMAGE_PATHS = {
     room: Path(__file__).with_name("assets")
     / "rooms"
@@ -119,6 +124,7 @@ def _show_login() -> None:
         with st.container(key="cubo_login_aside"):
             st.html(
                 _compact_html(_login_video_markup()),
+                unsafe_allow_javascript=True,
             )
             st.markdown(
                 _compact_html(_login_aside_markup()),
@@ -509,10 +515,64 @@ def _show_topbar(username: str) -> bool:
 
 def _login_video_markup() -> str:
     return f"""
-        <video class="cubo-login-video" autoplay muted loop playsinline
+        <video id="cubo-login-video" class="cubo-login-video"
+               autoplay muted loop playsinline
                preload="auto" aria-hidden="true" tabindex="-1">
             <source src="{LOGIN_VIDEO_URL}" type="video/mp4">
         </video>
+        <script>
+            (() => {{
+                window.__cuboLoginVideoCleanup?.();
+
+                const video = document.getElementById("cubo-login-video");
+                if (!video) return;
+
+                const controller = new AbortController();
+                const options = {{ signal: controller.signal }};
+                window.__cuboLoginVideoCleanup = () => controller.abort();
+
+                const reducedMotion = window.matchMedia(
+                    "(prefers-reduced-motion: reduce)"
+                );
+                if (reducedMotion.matches) {{
+                    video.autoplay = false;
+                    video.removeAttribute("autoplay");
+                    const showFirstFrame = () => {{
+                        video.pause();
+                        if (video.readyState >= 2 && video.currentTime === 0) {{
+                            video.currentTime = 0.01;
+                        }}
+                    }};
+                    video.addEventListener("loadeddata", showFirstFrame, options);
+                    requestAnimationFrame(showFirstFrame);
+                    return;
+                }}
+
+                const play = () => {{
+                    video.defaultMuted = true;
+                    video.muted = true;
+                    video.setAttribute("muted", "");
+                    const playback = video.play();
+                    if (playback) playback.catch(() => {{}});
+                }};
+
+                video.addEventListener("loadedmetadata", play, options);
+                video.addEventListener("canplay", play, options);
+                window.addEventListener("pageshow", play, options);
+                document.addEventListener("visibilitychange", () => {{
+                    if (!document.hidden) play();
+                }}, options);
+
+                for (const eventName of ["pointerdown", "touchstart", "keydown"]) {{
+                    document.addEventListener(eventName, play, {{
+                        ...options,
+                        once: true,
+                    }});
+                }}
+
+                requestAnimationFrame(play);
+            }})();
+        </script>
     """
 
 
